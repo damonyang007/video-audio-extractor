@@ -270,7 +270,8 @@ def main():
     threading.Thread(target=lambda: app.run(host="127.0.0.1", port=port, debug=False), daemon=True).start()
     import time; time.sleep(1)
     webbrowser.open(f"http://127.0.0.1:{port}")
-    dialogs.start()
+    while True:
+        time.sleep(1)
 
 
 if __name__ == "__main__":
