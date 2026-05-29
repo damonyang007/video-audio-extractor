@@ -1,6 +1,8 @@
 import subprocess
 import json
 
+CREATE_NO_WINDOW = 0x08000000
+
 
 def _ps_dialog(action: str) -> str:
     ps = {
@@ -27,8 +29,8 @@ $d.Description = '选择保存目录'
 if ($d.ShowDialog() -eq 'OK') { Write-Output ($d.SelectedPath -replace '\\','\\') } else { Write-Output '' }
 """
     }
-    r = subprocess.run(["powershell", "-STA", "-NoProfile", "-Command", ps[action]],
-                       capture_output=True, text=True, timeout=120)
+    r = subprocess.run(["powershell", "-STA", "-NoProfile", "-WindowStyle", "Hidden", "-Command", ps[action]],
+                       capture_output=True, text=True, timeout=120, creationflags=CREATE_NO_WINDOW)
     return r.stdout.strip()
 
 
