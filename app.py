@@ -143,27 +143,16 @@ def _batch(files, fmt, qual):
         return jsonify({"ok": False, "error": "\u65e0\u6709\u6548\u6587\u4ef6"})
     if not engine.ensure_ffmpeg():
         return jsonify({"ok": False, "error": "ffmpeg \u5931\u8d25"})
-
     ae.store["file_n"] = len(valid)
     ae.store["file_i"] = 0
-    codec = engine.CODEC_MAP.get(fmt, "libmp3lame")
-    br = engine.BITRATE.get(qual, "192k")
 
     def job():
-        ok = 0
-        for i, f in enumerate(valid):
-            if ae._cancel: break
-            ae.store["file_i"] = i + 1
-            ae.store["pct"] = 0
-            ae.store["status"] = f"\u63d0\u53d6 {i+1}/{len(valid)}: {Path(f).name[:30]}..."
-            out = str(Path(f).with_suffix(f".{fmt}"))
-            c = [engine.tool("ffmpeg.exe"), "-nostdin", "-threads", "0", "-i", f,
-                 "-vn", "-acodec", "copy" if engine.can_pass_through(f, fmt) else codec,
-                 "-b:a", br, "-y", out]
-            if engine.run_ffmpeg(c) == 0 and not ae._cancel:
-                ok += 1; history.add(f, "file", out)
+        ok = engine.batch_extract(valid, fmt, qual)
         ae.store.update({"pct": 100, "output": valid[-1] if valid else "",
                         "status": f"\u2714 {ok}/{len(valid)} \u5b8c\u6210" if ok else "\u5931\u8d25", "done": True})
+        for f in valid:
+            if (Path(f).with_suffix(f".{fmt}")).exists():
+                history.add(f, "file", str(Path(f).with_suffix(f".{fmt}")))
 
     engine.start_job(job)
     return jsonify({"ok": True})

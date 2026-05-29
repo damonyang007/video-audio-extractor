@@ -127,3 +127,22 @@ def start_job(fn):
     ae.store["done"] = False
     ae.store["output"] = ""
     threading.Thread(target=fn, daemon=True).start()
+
+
+def batch_extract(files: list[str], fmt: str, qual: str) -> int:
+    """Extract audio from multiple files. Returns count of successful extractions."""
+    codec = CODEC_MAP.get(fmt, "libmp3lame")
+    br = BITRATE.get(qual, "192k")
+    ok = 0
+    for i, f in enumerate(files):
+        if ae._cancel: break
+        ae.store["file_i"] = i + 1
+        ae.store["pct"] = 0
+        ae.store["status"] = f"\u63d0\u53d6 {i+1}/{len(files)}: {Path(f).name[:30]}..."
+        out = str(Path(f).with_suffix(f".{fmt}"))
+        c = [tool("ffmpeg.exe"), "-nostdin", "-threads", "0", "-i", f,
+             "-vn", "-acodec", "copy" if can_pass_through(f, fmt) else codec,
+             "-b:a", br, "-y", out]
+        if run_ffmpeg(c) == 0 and not ae._cancel:
+            ok += 1
+    return ok
