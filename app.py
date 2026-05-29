@@ -208,7 +208,8 @@ def api_extract_url():
         ae.store["status"] = "yt-dlp \u4e0b\u8f7d\u4e2d ..."
         ae._proc = subprocess.Popen(
             [ytdlp, "-x", "--audio-format", fmt, "--audio-quality", br,
-             "-o", str(Path(out_dir) / "%(title)s.%(ext)s"), "--no-playlist", url],
+                "-o", str(Path(out_dir) / "%(title)s.%(ext)s"),
+                "--no-playlist" if not d.get("playlist") else "--yes-playlist", url],
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
             text=True, encoding="utf-8", errors="replace"
         )
@@ -228,6 +229,33 @@ def api_extract_url():
         if ok and ae.store["output"]:
             history.add(url, "url", ae.store["output"])
         ae.store.update({"status": "\u2714 \u5df2\u5b8c\u6210" if ok else "\u5931\u8d25", "pct": 100, "done": True})
+
+    engine.start_job(job)
+    return jsonify({"ok": True})
+
+
+@app.route("/api/convert-audio", methods=["POST"])
+def api_convert_audio():
+    d = request.json
+    in_path = d.get("input", "")
+    out_fmt = d.get("format", "mp3")
+    if not in_path or not Path(in_path).is_file():
+        return jsonify({"ok": False, "error": "\u6587\u4ef6\u4e0d\u5b58\u5728"})
+    if not engine.ensure_ffmpeg():
+        return jsonify({"ok": False, "error": "ffmpeg \u5931\u8d25"})
+    out = d.get("output") or str(Path(in_path).with_suffix(f".{out_fmt}"))
+    codec = engine.CODEC_MAP.get(out_fmt, "libmp3lame")
+    br = engine.BITRATE.get(d.get("quality", "medium"), "192k")
+    ae.store["status"] = "\u8f6c\u6362\u4e2d ..."
+
+    def job():
+        c = [engine.tool("ffmpeg.exe"), "-nostdin", "-threads", "0", "-i", in_path,
+             "-acodec", codec, "-b:a", br, "-y", out]
+        rc = engine.run_ffmpeg(c)
+        ae.store.update({"pct": 100, "output": out,
+                        "status": "\u2714 \u5df2\u5b8c\u6210" if rc == 0 else "\u5931\u8d25", "done": True})
+        if rc == 0:
+            history.add(in_path, "file", out)
 
     engine.start_job(job)
     return jsonify({"ok": True})
