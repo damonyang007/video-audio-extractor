@@ -53,20 +53,17 @@ def api_config():
 
 @app.route("/api/select-file")
 def api_select_file():
-    dialogs._dialogs.put("file")
-    return jsonify({"path": dialogs._results.get()})
+    return jsonify({"path": dialogs.request_dialog("file")})
 
 
 @app.route("/api/select-save")
 def api_select_save():
-    dialogs._dialogs.put("save")
-    return jsonify({"path": dialogs._results.get()})
+    return jsonify({"path": dialogs.request_dialog("save")})
 
 
 @app.route("/api/select-dir")
 def api_select_dir():
-    dialogs._dialogs.put("dir")
-    return jsonify({"path": dialogs._results.get()})
+    return jsonify({"path": dialogs.request_dialog("dir")})
 
 
 @app.route("/api/cancel", methods=["POST"])
