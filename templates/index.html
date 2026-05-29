@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AudioExtract</title>
+<style>
+:root {
+  --bg: #000;
+  --card: #161823;
+  --border: #2a2b3d;
+  --input: #1e1f2c;
+  --pink: #fe2c55;
+  --pink-h: #e0264c;
+  --cyan: #20d5ec;
+  --white: #fff;
+  --sub: #a8a9b4;
+  --dim: #5a5b6a;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--white);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 24px 20px;
+}
+.container { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 14px; }
+
+.header { display: flex; align-items: center; gap: 12px; padding: 6px 0; }
+.logo { display: flex; gap: 3px; align-items: flex-end; height: 32px; }
+.logo-bar { width: 6px; background: var(--pink); border-radius: 3px; }
+.logo-bar:nth-child(1) { height: 14px; }
+.logo-bar:nth-child(2) { height: 22px; }
+.logo-bar:nth-child(3) { height: 30px; }
+.logo-bar:nth-child(4) { height: 20px; }
+.title { font-size: 20px; font-weight: 800; }
+.subtitle { font-size: 12px; color: var(--sub); }
+
+.tabs {
+  display: flex; background: var(--card); border-radius: 10px; padding: 3px; gap: 3px;
+}
+.tab {
+  flex: 1; text-align: center; padding: 10px; border-radius: 8px;
+  cursor: pointer; font-size: 14px; font-weight: 600; color: var(--sub);
+  transition: all .2s; border: none; background: none;
+}
+.tab.active { background: var(--pink); color: var(--white); }
+
+.card {
+  background: var(--card); border-radius: 10px; padding: 18px; border: 1px solid var(--border);
+}
+.card-title { font-size: 14px; font-weight: 700; margin-bottom: 12px; }
+.card-label { font-size: 12px; color: var(--sub); margin-bottom: 6px; }
+
+input[type="text"], .file-box {
+  width: 100%;
+  background: var(--input);
+  border: none;
+  border-radius: 8px;
+  padding: 12px 14px;
+  color: var(--white);
+  font-size: 13px;
+  outline: none;
+  font-family: inherit;
+}
+.file-box {
+  color: var(--dim);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  user-select: none;
+}
+input::placeholder { color: var(--dim); }
+
+.input-row { display: flex; gap: 8px; align-items: center; }
+.input-row input { flex: 1; }
+
+.btn {
+  background: var(--pink); color: var(--white); border: none; border-radius: 8px;
+  padding: 10px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
+  white-space: nowrap; transition: all .15s; font-family: inherit;
+}
+.btn:hover { background: var(--pink-h); }
+.btn:active { transform: scale(.97); }
+.btn.small { padding: 8px 12px; font-size: 12px; background: var(--input); color: var(--sub); }
+.btn.small:hover { background: var(--border); color: var(--white); }
+.btn.big {
+  width: 100%; padding: 14px; font-size: 16px; font-weight: 700;
+  border-radius: 10px; margin-top: 6px;
+}
+.btn.big:disabled { background: var(--border); color: var(--dim); cursor: default; transform: none; }
+
+.settings-row { display: flex; gap: 12px; margin-top: 10px; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field label { font-size: 11px; color: var(--dim); }
+.field select {
+  background: var(--input); border: none; border-radius: 6px; padding: 8px 10px;
+  color: var(--white); font-size: 13px; outline: none; font-family: inherit; cursor: pointer;
+}
+
+.progress-wrap { margin-top: 6px; }
+.progress-bar {
+  width: 100%; height: 3px; background: var(--border); border-radius: 3px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; background: linear-gradient(90deg, var(--pink), var(--cyan));
+  border-radius: 3px; transition: width .3s; width: 0;
+}
+.status-row {
+  display: flex; align-items: center; gap: 8px; margin-top: 6px;
+  font-size: 12px; color: var(--sub);
+}
+.status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+.result { margin-top: 10px; text-align: center; }
+.result a {
+  color: var(--cyan); text-decoration: none; font-size: 13px; cursor: pointer;
+}
+.result a:hover { text-decoration: underline; }
+.hint { font-size: 11px; color: var(--dim); margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="logo">
+      <div class="logo-bar"></div><div class="logo-bar"></div>
+      <div class="logo-bar"></div><div class="logo-bar"></div>
+    </div>
+    <div>
+      <div class="title">AudioExtract</div>
+      <div class="subtitle">提取视频音频，一键搞定</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('local')">本地文件</button>
+    <button class="tab" onclick="switchTab('url')">在线链接</button>
+  </div>
+
+  <div id="tab-local">
+    <div class="card">
+      <div class="card-title">视频文件</div>
+      <div class="input-row">
+        <div class="file-box" id="file-display" onclick="selectFile()">点击选择文件...</div>
+        <button class="btn small" onclick="selectFile()">浏览</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">输出设置</div>
+      <div class="settings-row">
+        <div class="field">
+          <label>格式</label>
+          <select id="local-fmt"><option>mp3</option><option>wav</option><option>aac</option><option>m4a</option><option>ogg</option><option>flac</option></select>
+        </div>
+        <div class="field">
+          <label>音质</label>
+          <select id="local-qual"><option value="low">低 (128k)</option><option value="medium" selected>中 (192k)</option><option value="high">高 (320k)</option></select>
+        </div>
+      </div>
+      <div class="card-label" style="margin-top:14px">保存至</div>
+      <input type="text" id="local-out" placeholder="自动生成...">
+    </div>
+  </div>
+
+  <div id="tab-url" style="display:none">
+    <div class="card">
+      <div class="card-title">视频链接</div>
+      <input type="text" id="url-text" placeholder="粘贴抖音、B 站链接，自动识别...">
+      <div class="hint">从复制文字中自动识别</div>
+    </div>
+    <div class="card">
+      <div class="card-title">输出设置</div>
+      <div class="settings-row">
+        <div class="field">
+          <label>格式</label>
+          <select id="url-fmt"><option>mp3</option><option>wav</option><option>aac</option><option>m4a</option><option>ogg</option><option>flac</option></select>
+        </div>
+        <div class="field">
+          <label>音质</label>
+          <select id="url-qual"><option value="low">低 (128k)</option><option value="medium" selected>中 (192k)</option><option value="high">高 (320k)</option></select>
+        </div>
+      </div>
+      <div class="card-label" style="margin-top:14px">保存目录</div>
+      <div class="input-row">
+        <input type="text" id="url-dir" placeholder="下载目录">
+        <button class="btn small" onclick="selectDir()">浏览</button>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn big" id="extract-btn" onclick="doExtract()">
+    &#9654;&#65039; 提取音频
+  </button>
+
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="fill"></div></div>
+    <div class="status-row">
+      <div class="status-dot" id="dot" style="background:var(--dim)"></div>
+      <span id="status">待命</span>
+    </div>
+  </div>
+
+  <div class="result" id="result"></div>
+</div>
+
+<script>
+let tab = "local";
+let filePath = "";
+
+function switchTab(t) {
+  tab = t;
+  document.querySelectorAll(".tab").forEach((el,i) => {
+    el.classList.toggle("active", (i===0 && t==="local") || (i===1 && t==="url"));
+  });
+  document.getElementById("tab-local").style.display = t === "local" ? "block" : "none";
+  document.getElementById("tab-url").style.display = t === "url" ? "block" : "none";
+}
+
+async function selectFile() {
+  const r = await fetch("/api/select-file");
+  const d = await r.json();
+  if (d.path) {
+    filePath = d.path;
+    const name = d.path.split("\\").pop();
+    document.getElementById("file-display").textContent = name;
+    document.getElementById("file-display").style.color = "var(--white)";
+    const base = name.replace(/\.[^.]+$/,"");
+    const fmt = document.getElementById("local-fmt").value;
+    document.getElementById("local-out").value = base + "." + fmt;
+  }
+}
+
+async function selectDir() {
+  const r = await fetch("/api/select-dir");
+  const d = await r.json();
+  if (d.path) document.getElementById("url-dir").value = d.path;
+}
+
+function doExtract() {
+  const btn = document.getElementById("extract-btn");
+  btn.disabled = true;
+  btn.textContent = "\u00b7\u00b7\u00b7 \u63d0\u53d6\u4e2d";
+  document.getElementById("dot").style.background = "var(--pink)";
+  document.getElementById("status").textContent = "\u51c6\u5907\u4e2d ...";
+  document.getElementById("result").innerHTML = "";
+
+  if (tab === "local") {
+    if (!filePath) { reset(); alert("\u8bf7\u5148\u9009\u62e9\u6587\u4ef6"); return; }
+    fetch("/api/extract-file", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        input: filePath,
+        output: document.getElementById("local-out").value,
+        format: document.getElementById("local-fmt").value,
+        quality: document.getElementById("local-qual").value
+      })
+    });
+  } else {
+    const u = document.getElementById("url-text").value.trim();
+    if (!u) { reset(); alert("\u8bf7\u8f93\u5165\u94fe\u63a5"); return; }
+    fetch("/api/extract-url", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        url: u,
+        output_dir: document.getElementById("url-dir").value,
+        format: document.getElementById("url-fmt").value,
+        quality: document.getElementById("url-qual").value
+      })
+    });
+  }
+}
+
+function reset() {
+  const btn = document.getElementById("extract-btn");
+  btn.disabled = false;
+  btn.textContent = "\u25b6\ufe0f \u63d0\u53d6\u97f3\u9891";
+  document.getElementById("dot").style.background = "var(--dim)";
+}
+
+const evt = new EventSource("/progress");
+evt.onmessage = e => {
+  const d = JSON.parse(e.data);
+  document.getElementById("fill").style.width = Math.min(d.percent||0, 100) + "%";
+  document.getElementById("status").textContent = d.status || "";
+  const ok = d.status && d.status.includes("\u2714");
+  const err = d.status && d.status.includes("\u5931\u8d25");
+  document.getElementById("dot").style.background = ok ? "var(--cyan)" : err ? "var(--pink)" : "var(--pink)";
+  if (ok || err) {
+    reset();
+    if (d.output) {
+      const dir = d.output.substring(0, d.output.lastIndexOf("\\"));
+      const s = dir.length > 42 ? dir.substring(0,20)+"..."+dir.slice(-19) : dir;
+      document.getElementById("result").innerHTML =
+        `<a onclick="fetch('/api/open-folder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:'${d.output}'})})">${s} &#8599;</a>`;
+    }
+  }
+};
+</script>
+</body>
+</html>
