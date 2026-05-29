@@ -1,0 +1,22 @@
+<section x-show="tab==='url'">
+  <div class="card">
+    <div class="card-title">视频链接</div>
+    <label class="label" for="url-text">粘贴链接</label>
+    <input type="text" id="url-text" x-model="urlText"
+           placeholder="粘贴抖音、B站、YouTube 链接..." autocomplete="off" @paste="onPaste">
+    <div class="hint">支持抖音 · B站 · YouTube · Ctrl+Enter 开始</div>
+    <label class="playlist-toggle">
+      <input type="checkbox" x-model="usePlaylist">
+      <span>下载整个播放列表/合集</span>
+    </label>
+  </div>
+  <div class="card">
+    <div class="card-title">输出设置</div>
+    <div class="settings-grid">
+      <div class="field"><label class="label" for="url-fmt">格式</label><select id="url-fmt" x-model="urlFmt" @change="savePrefs"><option>mp3</option><option>wav</option><option>aac</option><option>m4a</option><option>ogg</option><option>flac</option></select></div>
+      <div class="field"><label class="label" for="url-qual">音质</label><select id="url-qual" x-model="urlQual" @change="savePrefs"><option value="low">低 (128k)</option><option value="medium">中 (192k)</option><option value="high">高 (320k)</option></select></div>
+    </div>
+    <label class="label" for="url-dir" style="margin-top:14px">保存目录</label>
+    <div class="row grow"><input type="text" id="url-dir" x-model="urlDir" placeholder="下载目录" autocomplete="off"><button class="btn" @click="selectDir">浏览</button></div>
+  </div>
+</section>

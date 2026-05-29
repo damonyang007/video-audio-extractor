@@ -1,174 +1,48 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>AudioExtract</title>
-<link rel="stylesheet" href="/static/style.css">
-<style>
-.tab-convert{background:var(--accent)!important;color:#fff!important}.tab-convert.active{background:var(--primary)!important}
-.shortcut-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border)}
-.shortcut-row:last-child{border-bottom:none}
-kbd{background:var(--input);border:1px solid var(--border);border-radius:4px;padding:2px 7px;font-size:11px;font-family:inherit;color:var(--white)}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
-.overlay-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;max-width:420px;width:90%;max-height:80vh;overflow-y:auto}
-.onboarding{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:250;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 20px;box-shadow:0 8px 32px rgba(0,0,0,.6);max-width:360px;font-size:13px;line-height:1.5}
-.onboarding .steps{display:flex;gap:4px;margin-top:10px}.onboarding .step{width:8px;height:8px;border-radius:50%;background:var(--border)}.onboarding .step.active{background:var(--primary)}
-.playlist-toggle{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:var(--sub);cursor:pointer}
-.playlist-toggle input[type="checkbox"]{accent-color:var(--primary);width:16px;height:16px;cursor:pointer}
-</style>
-<script defer src="/static/app.js"></script>
+<link rel="stylesheet" href="/static/css/style.css">
+<script defer src="/static/js/utils.js"></script>
+<script defer src="/static/js/store.js"></script>
+<script defer src="/static/js/app.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body>
 
 <div class="loading-screen" id="ld">
-  <div class="spinner"></div><div style="font-size:13px;color:var(--sub)">Loading AudioExtract...</div>
+  <div class="spinner"></div>
+  <div style="font-size:13px;color:var(--sub)">Loading AudioExtract...</div>
 </div>
 
-<!-- Onboarding -->
-<div class="onboarding" x-show="showOnboarding" x-cloak style="display:none">
-  <div style="font-weight:700;color:var(--white);margin-bottom:4px">快速开始</div>
-  <div x-show="onboardStep===0">
-    选择一个视频文件，设置输出格式和音质。
-  </div>
-  <div x-show="onboardStep===1">
-    粘贴抖音/B站链接，程序自动识别并下载音频。
-  </div>
-  <div x-show="onboardStep===2">
-    按 <kbd>?</kbd> 查看所有快捷键。准备好了就点"提取音频"！
-  </div>
-  <div class="steps">
-    <div class="step" :class="{active:onboardStep===0}"></div>
-    <div class="step" :class="{active:onboardStep===1}"></div>
-    <div class="step" :class="{active:onboardStep===2}"></div>
-  </div>
-  <div style="margin-top:10px;display:flex;gap:6px">
-    <button class="btn btn-sm" @click="onboardStep=Math.max(0,onboardStep-1)" x-show="onboardStep>0">上一步</button>
-    <button class="btn btn-sm" @click="onboardStep<2?onboardStep++:showOnboarding=false" style="margin-left:auto;background:var(--primary);color:#fff;border-color:var(--primary)" x-text="onboardStep<2?'下一步':'开始使用'"></button>
-  </div>
-</div>
+{% include 'partials/onboarding.html' %}
+{% include 'partials/shortcuts.html' %}
 
-<!-- Shortcuts modal -->
-<div class="overlay" x-show="showShortcuts" @click.self="showShortcuts=false" @keydown.escape="showShortcuts=false" x-cloak style="display:none">
-  <div class="overlay-card">
-    <div class="card-title" style="margin-bottom:16px">键盘快捷键 <button class="btn btn-sm" style="float:right" @click="showShortcuts=false">&times;</button></div>
-    <div class="shortcut-row"><span>开始提取</span><kbd>Ctrl</kbd> + <kbd>Enter</kbd></div>
-    <div class="shortcut-row"><span>切换标签 (本地)</span><kbd>Ctrl</kbd> + <kbd>1</kbd></div>
-    <div class="shortcut-row"><span>切换标签 (在线)</span><kbd>Ctrl</kbd> + <kbd>2</kbd></div>
-    <div class="shortcut-row"><span>切换标签 (转换)</span><kbd>Ctrl</kbd> + <kbd>3</kbd></div>
-    <div class="shortcut-row"><span>选择文件</span><kbd>Ctrl</kbd> + <kbd>O</kbd></div>
-    <div class="shortcut-row"><span>快捷键帮助</span><kbd>?</kbd></div>
-    <div class="shortcut-row"><span>取消提取</span><kbd>Esc</kbd></div>
-    <div class="shortcut-row"><span>关闭弹窗</span><kbd>Esc</kbd></div>
-  </div>
-</div>
-
-<div class="container" x-data="app()" x-cloak @keydown.ctrl.enter="doExtract"
-     @keydown.ctrl.1.prevent="tab='local'" @keydown.ctrl.2.prevent="tab='url'"
-     @keydown.ctrl.3.prevent="tab='convert'" @keydown.ctrl.o.prevent="openFile"
+<div class="container" x-data="app()" x-cloak
+     @keydown.ctrl.enter="doExtract"
+     @keydown.ctrl.1.prevent="tab='local'"
+     @keydown.ctrl.2.prevent="tab='url'"
+     @keydown.ctrl.3.prevent="tab='convert'"
+     @keydown.ctrl.o.prevent="openFile"
      @keydown.?.prevent="showShortcuts=!showShortcuts">
 
-  <header class="header">
-    <svg class="logo-svg" viewBox="0 0 36 36" fill="none">
-      <defs><linearGradient id="lg" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stop-color="var(--primary)"/><stop offset="100%" stop-color="var(--accent)"/></linearGradient></defs>
-      <rect x="5" y="16" width="5" height="14" rx="2.5" fill="url(#lg)"/>
-      <rect x="13" y="8" width="5" height="22" rx="2.5" fill="url(#lg)" opacity=".85"/>
-      <rect x="21" y="3" width="5" height="27" rx="2.5" fill="url(#lg)" opacity=".7"/>
-      <rect x="29" y="12" width="5" height="18" rx="2.5" fill="url(#lg)" opacity=".55"/>
-    </svg>
-    <div><div class="title">AudioExtract</div><div class="sub">提取视频音频 · 一键搞定</div></div>
-    <button class="theme-btn header-right" @click="toggleTheme" x-text="theme==='dark'?'&#x263C;':'&#x263D;'" :title="theme==='dark'?'切换亮色':'切换暗色'"></button>
-  </header>
+  {% include 'partials/header.html' %}
+  {% include 'partials/tabs.html' %}
 
-  <nav class="tab-bar" role="tablist">
-    <button class="tab-btn" :class="{active:tab==='local'}" @click="tab='local'">本地文件</button>
-    <button class="tab-btn" :class="{active:tab==='url'}" @click="tab='url'">在线链接</button>
-    <button class="tab-btn tab-convert" :class="{active:tab==='convert'}" @click="tab='convert'">格式转换</button>
-  </nav>
+  {% include 'partials/tab-local.html' %}
+  {% include 'partials/tab-url.html' %}
+  {% include 'partials/tab-convert.html' %}
 
-  <!-- LOCAL TAB -->
-  <section x-show="tab==='local'">
-    <div class="card">
-      <div class="card-title">视频文件 <button class="btn btn-sm" @click="batchMode=!batchMode" x-text="batchMode?'单文件':'批量'" :style="batchMode?'background:var(--primary);color:#fff;border-color:var(--primary)':''"></button></div>
-      <template x-if="!batchMode">
-        <div>
-          <div class="drop-zone" :class="{'has-file':!!filePath,'drag-over':dragOver}" @click="selectFile" @dragover.prevent="dragOver=true" @dragleave="dragOver=false" @drop.prevent="handleDrop($event)" tabindex="0" @keydown.enter="selectFile">
-            <template x-if="!filePath"><div>拖拽视频到此处，或点击浏览</div></template>
-            <template x-if="filePath"><div x-text="filePath.split('\\\\').pop()" style="color:var(--white)"></div></template>
-          </div>
-          <div x-show="filePath" style="margin-top:14px">
-            <div class="card" style="background:var(--input);padding:12px;border-radius:10px">
-              <div class="card-title" style="margin-bottom:8px;font-size:13px;display:flex;justify-content:space-between">
-                音频裁剪 <span style="font-weight:400;font-size:11px;color:var(--dim)"><span x-text="tStart||'0:00'"></span> — <span x-text="tEnd||'结尾'"></span></span></div>
-              <video :src="'/api/video?path='+encodeURIComponent(filePath)" style="width:100%;border-radius:8px;max-height:160px;background:#000" controls id="player" @loadedmetadata="onVideoLoad" preload="metadata"></video>
-              <div class="row" style="margin-top:10px;gap:6px">
-                <button class="btn btn-sm" @click="setStart" style="flex:1">设为起始</button><button class="btn btn-sm" @click="setEnd" style="flex:1">设为结束</button>
-                <button class="btn btn-sm" @click="resetTrim">重置</button><button class="btn btn-sm" @click="previewTrim" style="background:var(--accent);color:#fff;border-color:var(--accent)">预览</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </template>
-      <template x-if="batchMode">
-        <div>
-          <div class="drop-zone" style="padding:16px" @click="addBatchFile" @dragover.prevent="dragOver=true" @dragleave="dragOver=false" @drop.prevent="handleBatchDrop"><div>点击或拖拽文件添加到列表</div></div>
-          <div class="batch-list" x-show="batchFiles.length>0"><template x-for="(f,i) in batchFiles" :key="i"><div class="batch-item"><span class="name" x-text="f.split('\\\\').pop()"></span><span class="del" @click="batchFiles.splice(i,1)">&times;</span></div></template></div>
-          <div x-show="batchFiles.length>0" style="margin-top:8px"><span style="font-size:12px;color:var(--sub)" x-text="batchFiles.length+' 个文件'"></span><button class="btn btn-sm btn-danger" style="float:right" @click="batchFiles=[]">清空</button></div>
-        </div>
-      </template>
-    </div>
-    <div class="card"><div class="card-title">输出设置</div>
-      <div class="settings-grid"><div class="field"><label class="label" for="local-fmt">格式</label><select id="local-fmt" x-model="localFmt" @change="savePrefs"><option>mp3</option><option>wav</option><option>aac</option><option>m4a</option><option>ogg</option><option>flac</option></select></div>
-      <div class="field"><label class="label" for="local-qual">音质</label><select id="local-qual" x-model="localQual" @change="savePrefs"><option value="low">低 (128k)</option><option value="medium">中 (192k)</option><option value="high">高 (320k)</option></select></div></div>
-      <label class="label" for="local-out" style="margin-top:14px">保存至</label><div class="row grow"><input type="text" id="local-out" x-model="localOut" placeholder="自动生成..." autocomplete="off"><button class="btn" @click="selectOutput">浏览</button></div>
-    </div>
-  </section>
-
-  <!-- URL TAB -->
-  <section x-show="tab==='url'">
-    <div class="card"><div class="card-title">视频链接</div>
-      <label class="label" for="url-text">粘贴链接</label>
-      <input type="text" id="url-text" x-model="urlText" placeholder="粘贴抖音、B站、YouTube 链接..." autocomplete="off" @paste="onPaste">
-      <div class="hint">支持抖音 · B站 · YouTube · Ctrl+Enter 开始</div>
-      <label class="playlist-toggle"><input type="checkbox" x-model="usePlaylist"><span>下载整个播放列表/合集</span></label>
-    </div>
-    <div class="card"><div class="card-title">输出设置</div>
-      <div class="settings-grid"><div class="field"><label class="label" for="url-fmt">格式</label><select id="url-fmt" x-model="urlFmt" @change="savePrefs"><option>mp3</option><option>wav</option><option>aac</option><option>m4a</option><option>ogg</option><option>flac</option></select></div>
-      <div class="field"><label class="label" for="url-qual">音质</label><select id="url-qual" x-model="urlQual" @change="savePrefs"><option value="low">低 (128k)</option><option value="medium">中 (192k)</option><option value="high">高 (320k)</option></select></div></div>
-      <label class="label" for="url-dir" style="margin-top:14px">保存目录</label><div class="row grow"><input type="text" id="url-dir" x-model="urlDir" placeholder="下载目录" autocomplete="off"><button class="btn" @click="selectDir">浏览</button></div>
-    </div>
-  </section>
-
-  <!-- CONVERT TAB -->
-  <section x-show="tab==='convert'">
-    <div class="card"><div class="card-title">音频格式转换</div>
-      <label class="label">选择音频文件</label>
-      <div class="drop-zone" :class="{'has-file':!!convPath}" style="padding:20px" @click="selectConvFile" @dragover.prevent="dragOver=true" @dragleave="dragOver=false" @drop.prevent="handleConvDrop" tabindex="0" @keydown.enter="selectConvFile">
-        <template x-if="!convPath"><div>选择要转换的音频文件</div></template>
-        <template x-if="convPath"><div x-text="convPath.split('\\\\').pop()" style="color:var(--white)"></div></template>
-      </div>
-      <div class="settings-grid" style="margin-top:14px"><div class="field"><label class="label">输出格式</label><select x-model="convFmt"><option>mp3</option><option>wav</option><option>aac</option><option>m4a</option><option>ogg</option><option>flac</option></select></div>
-      <div class="field"><label class="label">音质</label><select x-model="convQual"><option value="low">低 (128k)</option><option value="medium">中 (192k)</option><option value="high">高 (320k)</option></select></div></div>
-      <label class="label" style="margin-top:14px">保存至</label><div class="row grow"><input type="text" x-model="convOut" placeholder="自动生成..." autocomplete="off"><button class="btn" @click="selectConvOutput">浏览</button></div>
-    </div>
-  </section>
-
-  <!-- Actions -->
   <button class="btn-primary" :disabled="working" @click="doExtract">
     <span x-text="working ? '··· 提取中' : tab==='convert' ? '开始转换' : batchMode && batchFiles.length ? '提取 '+batchFiles.length+' 个文件' : '提取音频'"></span>
   </button>
   <button class="btn-cancel" x-show="working" @click="cancel">取消提取</button>
 
-  <div class="progress-wrap">
-    <div class="progress-bar"><div class="progress-fill" :style="'width:'+$store.progress.pct+'%'"></div></div>
-    <div class="status-row"><div class="status-left"><div class="status-dot" :style="'background:'+$store.progress.dotColor"></div><span x-text="$store.progress.status"></span><span x-show="$store.progress.file_n>0" style="color:var(--dim);font-size:11px" x-text="'('+$store.progress.file_i+'/'+$store.progress.file_n+')'"></span></div><span x-show="$store.progress.eta" style="color:var(--dim);font-size:11px" x-text="$store.progress.eta"></span></div>
-  </div>
-  <div class="result-row" x-show="$store.progress.output && !working"><a class="result-link" href="#" @click.prevent="openFolder" style="margin-top:0">打开文件夹 →</a><button class="btn btn-sm" @click="playAudio" style="color:var(--cyan);border-color:var(--cyan)">播放音频</button></div>
-  <audio x-show="showPlayer" :src="'/api/video?path='+encodeURIComponent($store.progress.output)" id="audio-player" controls style="display:block" @canplay="document.getElementById('audio-player').play()"></audio>
+  {% include 'partials/progress.html' %}
+  {% include 'partials/history.html' %}
 
-  <div class="card" x-show="history.length>0"><div class="card-title" style="margin-bottom:6px">最近提取 <button class="btn btn-sm btn-danger" style="margin-left:auto" @click="clearHistory">清除</button></div>
-    <div class="history-card"><template x-for="(h,i) in history" :key="i"><div class="history-item" @click="openPath(h.output)"><span class="kind" x-text="h.kind==='url'?'URL':'FILE'" :style="h.kind==='url'?'background:var(--cyan)':''"></span><span class="src" x-text="h.source"></span><span class="time" x-text="h.time"></span></div></template></div>
-  </div>
 </div>
 </body>
 </html>

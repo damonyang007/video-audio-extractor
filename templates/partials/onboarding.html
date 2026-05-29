@@ -1,0 +1,17 @@
+<div class="onboarding" x-show="showOnboarding" x-cloak style="display:none">
+  <div style="font-weight:700;color:var(--white);margin-bottom:4px">快速开始</div>
+  <div x-show="onboardStep===0">选择一个视频文件，设置输出格式和音质。</div>
+  <div x-show="onboardStep===1">粘贴抖音/B站链接，程序自动识别并下载音频。</div>
+  <div x-show="onboardStep===2">按 <kbd>?</kbd> 查看快捷键。准备好了就开始！</div>
+  <div class="steps">
+    <div class="step" :class="{active:onboardStep===0}"></div>
+    <div class="step" :class="{active:onboardStep===1}"></div>
+    <div class="step" :class="{active:onboardStep===2}"></div>
+  </div>
+  <div style="margin-top:10px;display:flex;gap:6px">
+    <button class="btn btn-sm" @click="onboardStep=Math.max(0,onboardStep-1)" x-show="onboardStep>0">上一步</button>
+    <button class="btn btn-sm" @click="onboardStep<2?onboardStep++:showOnboarding=false"
+            style="margin-left:auto;background:var(--primary);color:#fff;border-color:var(--primary)"
+            x-text="onboardStep<2?'下一步':'开始使用'"></button>
+  </div>
+</div>

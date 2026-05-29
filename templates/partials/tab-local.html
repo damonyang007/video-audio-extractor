@@ -1,0 +1,72 @@
+<section x-show="tab==='local'">
+  <div class="card">
+    <div class="card-title">
+      视频文件
+      <button class="btn btn-sm" @click="batchMode=!batchMode"
+              x-text="batchMode?'单文件':'批量'"
+              :style="batchMode?'background:var(--primary);color:#fff;border-color:var(--primary)':''"></button>
+    </div>
+
+    <template x-if="!batchMode">
+      <div>
+        <div class="drop-zone" :class="{'has-file':!!filePath,'drag-over':dragOver}"
+             @click="selectFile" @dragover.prevent="dragOver=true" @dragleave="dragOver=false"
+             @drop.prevent="handleDrop($event)" tabindex="0" @keydown.enter="selectFile">
+          <template x-if="!filePath"><div>拖拽视频到此处，或点击浏览</div></template>
+          <template x-if="filePath"><div x-text="filePath.split('\\\\').pop()" style="color:var(--white)"></div></template>
+        </div>
+        <div x-show="filePath" style="margin-top:14px">
+          <div class="card" style="background:var(--input);padding:12px;border-radius:10px">
+            <div class="card-title" style="margin-bottom:8px;font-size:13px;display:flex;justify-content:space-between">
+              音频裁剪
+              <span style="font-weight:400;font-size:11px;color:var(--dim)">
+                <span x-text="tStart||'0:00'"></span> — <span x-text="tEnd||'结尾'"></span>
+              </span>
+            </div>
+            <video :src="'/api/video?path='+encodeURIComponent(filePath)" style="width:100%;border-radius:8px;max-height:160px;background:#000"
+                   controls id="player" preload="metadata"></video>
+            <div class="row" style="margin-top:10px;gap:6px">
+              <button class="btn btn-sm" @click="setStart" style="flex:1">设为起始</button>
+              <button class="btn btn-sm" @click="setEnd" style="flex:1">设为结束</button>
+              <button class="btn btn-sm" @click="resetTrim">重置</button>
+              <button class="btn btn-sm" @click="previewTrim"
+                      style="background:var(--accent);color:#fff;border-color:var(--accent)">预览</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template x-if="batchMode">
+      <div>
+        <div class="drop-zone" style="padding:16px"
+             @click="addBatchFile" @dragover.prevent="dragOver=true"
+             @dragleave="dragOver=false" @drop.prevent="handleBatchDrop">
+          <div>点击或拖拽文件添加到列表</div>
+        </div>
+        <div class="batch-list" x-show="batchFiles.length>0">
+          <template x-for="(f,i) in batchFiles" :key="i">
+            <div class="batch-item">
+              <span class="name" x-text="f.split('\\\\').pop()"></span>
+              <span class="del" @click="batchFiles.splice(i,1)">&times;</span>
+            </div>
+          </template>
+        </div>
+        <div x-show="batchFiles.length>0" style="margin-top:8px">
+          <span style="font-size:12px;color:var(--sub)" x-text="batchFiles.length+' 个文件'"></span>
+          <button class="btn btn-sm btn-danger" style="float:right" @click="batchFiles=[]">清空</button>
+        </div>
+      </div>
+    </template>
+  </div>
+
+  <div class="card">
+    <div class="card-title">输出设置</div>
+    <div class="settings-grid">
+      <div class="field"><label class="label" for="local-fmt">格式</label><select id="local-fmt" x-model="localFmt" @change="savePrefs"><option>mp3</option><option>wav</option><option>aac</option><option>m4a</option><option>ogg</option><option>flac</option></select></div>
+      <div class="field"><label class="label" for="local-qual">音质</label><select id="local-qual" x-model="localQual" @change="savePrefs"><option value="low">低 (128k)</option><option value="medium">中 (192k)</option><option value="high">高 (320k)</option></select></div>
+    </div>
+    <label class="label" for="local-out" style="margin-top:14px">保存至</label>
+    <div class="row grow"><input type="text" id="local-out" x-model="localOut" placeholder="自动生成..." autocomplete="off"><button class="btn" @click="selectOutput">浏览</button></div>
+  </div>
+</section>

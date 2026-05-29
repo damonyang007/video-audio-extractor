@@ -1,0 +1,16 @@
+<header class="header">
+  <svg class="logo-svg" viewBox="0 0 36 36" fill="none">
+    <defs><linearGradient id="lg" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stop-color="var(--primary)"/><stop offset="100%" stop-color="var(--accent)"/></linearGradient></defs>
+    <rect x="5" y="16" width="5" height="14" rx="2.5" fill="url(#lg)"/>
+    <rect x="13" y="8" width="5" height="22" rx="2.5" fill="url(#lg)" opacity=".85"/>
+    <rect x="21" y="3" width="5" height="27" rx="2.5" fill="url(#lg)" opacity=".7"/>
+    <rect x="29" y="12" width="5" height="18" rx="2.5" fill="url(#lg)" opacity=".55"/>
+  </svg>
+  <div>
+    <div class="title">AudioExtract</div>
+    <div class="sub">提取视频音频 · 一键搞定</div>
+  </div>
+  <button class="theme-btn header-right" @click="toggleTheme"
+          x-text="theme==='dark'?'&#x263C;':'&#x263D;'"
+          :title="theme==='dark'?'切换亮色':'切换暗色'"></button>
+</header>

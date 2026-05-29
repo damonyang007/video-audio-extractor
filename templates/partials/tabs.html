@@ -1,0 +1,5 @@
+<nav class="tab-bar" role="tablist">
+  <button class="tab-btn" :class="{active:tab==='local'}" @click="tab='local'">本地文件</button>
+  <button class="tab-btn" :class="{active:tab==='url'}" @click="tab='url'">在线链接</button>
+  <button class="tab-btn tab-convert" :class="{active:tab==='convert'}" @click="tab='convert'">格式转换</button>
+</nav>

@@ -1,0 +1,19 @@
+<section x-show="tab==='convert'">
+  <div class="card">
+    <div class="card-title">音频格式转换</div>
+    <label class="label">选择音频文件</label>
+    <div class="drop-zone" :class="{'has-file':!!convPath}" style="padding:20px"
+         @click="selectConvFile" @dragover.prevent="dragOver=true"
+         @dragleave="dragOver=false" @drop.prevent="handleConvDrop"
+         tabindex="0" @keydown.enter="selectConvFile">
+      <template x-if="!convPath"><div>选择要转换的音频文件</div></template>
+      <template x-if="convPath"><div x-text="convPath.split('\\\\').pop()" style="color:var(--white)"></div></template>
+    </div>
+    <div class="settings-grid" style="margin-top:14px">
+      <div class="field"><label class="label">输出格式</label><select x-model="convFmt"><option>mp3</option><option>wav</option><option>aac</option><option>m4a</option><option>ogg</option><option>flac</option></select></div>
+      <div class="field"><label class="label">音质</label><select x-model="convQual"><option value="low">低 (128k)</option><option value="medium">中 (192k)</option><option value="high">高 (320k)</option></select></div>
+    </div>
+    <label class="label" style="margin-top:14px">保存至</label>
+    <div class="row grow"><input type="text" x-model="convOut" placeholder="自动生成..." autocomplete="off"><button class="btn" @click="selectConvOutput">浏览</button></div>
+  </div>
+</section>

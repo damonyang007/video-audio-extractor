@@ -1,0 +1,20 @@
+<div class="progress-wrap">
+  <div class="progress-bar"><div class="progress-fill" :style="'width:'+$store.progress.pct+'%'"></div></div>
+  <div class="status-row">
+    <div class="status-left">
+      <div class="status-dot" :style="'background:'+$store.progress.dotColor"></div>
+      <span x-text="$store.progress.status"></span>
+      <span x-show="$store.progress.file_n>0" style="color:var(--dim);font-size:11px"
+            x-text="'('+$store.progress.file_i+'/'+$store.progress.file_n+')'"></span>
+    </div>
+    <span x-show="$store.progress.eta" style="color:var(--dim);font-size:11px"
+          x-text="$store.progress.eta"></span>
+  </div>
+</div>
+<div class="result-row" x-show="$store.progress.output && !working">
+  <a class="result-link" href="#" @click.prevent="openFolder" style="margin-top:0">打开文件夹 →</a>
+  <button class="btn btn-sm" @click="playAudio" style="color:var(--cyan);border-color:var(--cyan)">播放音频</button>
+</div>
+<audio x-show="showPlayer" :src="'/api/video?path='+encodeURIComponent($store.progress.output)"
+       id="audio-player" controls style="display:block"
+       @canplay="document.getElementById('audio-player').play()"></audio>

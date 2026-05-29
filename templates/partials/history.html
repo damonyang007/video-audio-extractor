@@ -1,0 +1,16 @@
+<div class="card" x-show="history.length>0">
+  <div class="card-title" style="margin-bottom:6px">
+    最近提取
+    <button class="btn btn-sm btn-danger" style="margin-left:auto" @click="clearHistory">清除</button>
+  </div>
+  <div class="history-card">
+    <template x-for="(h,i) in history" :key="i">
+      <div class="history-item" @click="openPath(h.output)">
+        <span class="kind" x-text="h.kind==='url'?'URL':'FILE'"
+              :style="h.kind==='url'?'background:var(--cyan)':''"></span>
+        <span class="src" x-text="h.source"></span>
+        <span class="time" x-text="h.time"></span>
+      </div>
+    </template>
+  </div>
+</div>

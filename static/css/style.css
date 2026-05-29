@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   --bg: #0a0a14; --card: rgba(22,22,40,.7); --card-hover: rgba(30,30,50,.8);
   --border: rgba(255,255,255,.06); --border-focus: rgba(254,44,85,.4);
   --input: rgba(10,10,25,.6); --primary: #fe2c55; --primary-h: #e0264c;
@@ -83,3 +83,15 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%
 audio{width:100%;height:32px;margin-top:8px;border-radius:8px}
 @media(max-width:480px){body{padding:16px 12px 36px}.settings-grid{grid-template-columns:1fr}.card{padding:16px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+.tab-convert{background:var(--accent)!important;color:#fff!important}
+.tab-convert.active{background:var(--primary)!important}
+.shortcut-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border)}
+.shortcut-row:last-child{border-bottom:none}
+kbd{background:var(--input);border:1px solid var(--border);border-radius:4px;padding:2px 7px;font-size:11px;font-family:inherit;color:var(--white)}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.overlay-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;max-width:420px;width:90%}
+.onboarding{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:250;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 20px;box-shadow:0 8px 32px rgba(0,0,0,.6);max-width:360px;font-size:13px;line-height:1.5}
+.onboarding .steps{display:flex;gap:4px;margin-top:10px;justify-content:center}
+.onboarding .step{width:8px;height:8px;border-radius:50%;background:var(--border)}.onboarding .step.active{background:var(--primary)}
+.playlist-toggle{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:var(--sub);cursor:pointer}
+.playlist-toggle input[type="checkbox"]{accent-color:var(--primary);width:16px;height:16px;cursor:pointer}

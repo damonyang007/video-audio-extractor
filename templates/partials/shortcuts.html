@@ -1,0 +1,16 @@
+<div class="overlay" x-show="showShortcuts" @click.self="showShortcuts=false"
+     @keydown.escape="showShortcuts=false" x-cloak style="display:none">
+  <div class="overlay-card">
+    <div class="card-title" style="margin-bottom:16px">
+      键盘快捷键
+      <button class="btn btn-sm" style="float:right" @click="showShortcuts=false">&times;</button>
+    </div>
+    <div class="shortcut-row"><span>开始提取</span><kbd>Ctrl</kbd> + <kbd>Enter</kbd></div>
+    <div class="shortcut-row"><span>本地文件</span><kbd>Ctrl</kbd> + <kbd>1</kbd></div>
+    <div class="shortcut-row"><span>在线链接</span><kbd>Ctrl</kbd> + <kbd>2</kbd></div>
+    <div class="shortcut-row"><span>格式转换</span><kbd>Ctrl</kbd> + <kbd>3</kbd></div>
+    <div class="shortcut-row"><span>选择文件</span><kbd>Ctrl</kbd> + <kbd>O</kbd></div>
+    <div class="shortcut-row"><span>快捷键帮助</span><kbd>?</kbd></div>
+    <div class="shortcut-row"><span>取消提取</span><kbd>Esc</kbd></div>
+  </div>
+</div>
