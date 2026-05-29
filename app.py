@@ -249,6 +249,14 @@ def api_select_file():
     return jsonify({"path": _results.pop(0)})
 
 
+@app.route("/api/select-save")
+def api_select_save():
+    _dialogs.append("save")
+    while not _results:
+        import time; time.sleep(0.05)
+    return jsonify({"path": _results.pop(0)})
+
+
 @app.route("/api/select-dir")
 def api_select_dir():
     _dialogs.append("dir")
@@ -492,6 +500,15 @@ def main():
                 _results.append(p or "")
             elif act == "dir":
                 p = filedialog.askdirectory(parent=_root, title="选择保存目录")
+                _results.append(p or "")
+            elif act == "save":
+                p = filedialog.asksaveasfilename(
+                    parent=_root, title="保存音频文件",
+                    filetypes=[("音频 (mp3)", "*.mp3"), ("音频 (wav)", "*.wav"),
+                               ("音频 (aac)", "*.aac"), ("音频 (m4a)", "*.m4a"),
+                               ("所有", "*.*")],
+                    defaultextension=".mp3"
+                )
                 _results.append(p or "")
         try:
             _root.update()

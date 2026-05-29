@@ -205,7 +205,10 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%
           <select id="local-qual" x-model="localQual"><option value="low">低 (128k)</option><option value="medium">中 (192k)</option><option value="high">高 (320k)</option></select></div>
       </div>
       <label class="label" for="local-out" style="margin-top:14px">保存至</label>
-      <input type="text" id="local-out" x-model="localOut" placeholder="自动生成..." autocomplete="off">
+      <div class="row grow">
+        <input type="text" id="local-out" x-model="localOut" placeholder="自动生成..." autocomplete="off">
+        <button class="btn" @click="selectOutput">浏览</button>
+      </div>
     </div>
   </section>
 
@@ -318,6 +321,10 @@ function app(){
     async clearHistory(){await fetch('/api/history/clear',{method:'POST'});this.history=[]},
 
     async selectFile(){const r=await fetch('/api/select-file');const d=await r.json();if(d.path)this.setFile(d.path)},
+    async selectOutput(){
+      const r=await fetch('/api/select-save');const d=await r.json()
+      if(d.path)this.localOut=d.path
+    },
     setFile(p){this.filePath=p;this.localOut=p.split('\\').pop().replace(/\.[^.]+$/,'')+'.'+this.localFmt},
     handleDrop(e){this.dragOver=false;const f=e.dataTransfer.files;if(f.length&&f[0].path)this.setFile(f[0].path);else this.showToast('请从文件管理器拖拽',true)},
 
