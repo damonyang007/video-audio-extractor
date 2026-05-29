@@ -8,6 +8,8 @@ import shutil
 import threading
 import zipfile
 import urllib.request
+import time as _time
+from datetime import datetime
 import tkinter as tk
 from tkinter import filedialog
 from pathlib import Path
@@ -31,7 +33,8 @@ FFMPEG_ZIP = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
 YTDLP_EXE  = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe"
 
 # ---- Global state ----
-store = {"pct": 0, "status": "\u5f85\u547d", "output": "", "done": False}
+store = {"pct": 0, "status": "\u5f85\u547d", "output": "", "done": False,
+         "file_i": 0, "file_n": 0}
 _cache = {}
 _cancel = False
 _proc = None
@@ -168,6 +171,41 @@ def extract_url(text: str) -> Optional[str]:
     return urls[0].rstrip(".,;:!?\"'") if urls else None
 
 
+# ---- History ----
+
+def _hist_path() -> Path:
+    p = Path(os.environ.get("APPDATA", str(Path.home()))) / "audioextract" / "history.json"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    return p
+
+
+def load_history() -> list:
+    try:
+        if _hist_path().is_file():
+            return json.loads(_hist_path().read_text(encoding="utf-8"))
+    except Exception:
+        pass
+    return []
+
+
+def save_history(entries: list):
+    try:
+        _hist_path().write_text(json.dumps(entries[-50:], ensure_ascii=False), encoding="utf-8")
+    except Exception:
+        pass
+
+
+def add_history(source: str, kind: str, output: str):
+    h = load_history()
+    h.insert(0, {
+        "source": str(Path(source).name) if kind == "file" else source[:60],
+        "kind": kind,
+        "output": output,
+        "time": datetime.now().strftime("%m-%d %H:%M")
+    })
+    save_history(h)
+
+
 # ---- Routes ----
 
 @app.route("/")
@@ -213,6 +251,17 @@ def api_cancel():
     return jsonify({"ok": True})
 
 
+@app.route("/api/history")
+def api_history():
+    return jsonify(load_history())
+
+
+@app.route("/api/history/clear", methods=["POST"])
+def api_history_clear():
+    save_history([])
+    return jsonify({"ok": True})
+
+
 def _start_job(fn):
     global _cancel
     _cancel = False
@@ -225,36 +274,91 @@ def _start_job(fn):
 @app.route("/api/extract-file", methods=["POST"])
 def api_extract_file():
     d = request.json
+    files = d.get("files")  # batch mode
     in_path = d.get("input", "")
     out_path = d.get("output", "")
     fmt = d.get("format", "mp3")
     qual = d.get("quality", "medium")
+    t_start = d.get("start", "")
+    t_end = d.get("end", "")
+
+    # Batch mode
+    if files and isinstance(files, list):
+        return _api_extract_batch(files, fmt, qual)
 
     if not in_path or not Path(in_path).is_file():
         return jsonify({"ok": False, "error": "文件不存在"})
     if not ensure_ffmpeg():
         return jsonify({"ok": False, "error": "ffmpeg 失败"})
-
     if not out_path:
         out_path = str(Path(in_path).with_suffix(f".{fmt}"))
 
     codec = CODEC_MAP.get(fmt, "libmp3lame")
     br = BITRATE.get(qual, "192k")
+    has_time = bool(t_start or t_end)
     dur = get_duration(in_path)
     store["status"] = f"提取中 ... {dur:.0f}s" if dur else "提取中 ..."
 
     def job():
         ffmpeg = tool("ffmpeg.exe")
-        if can_pass_through(in_path, fmt):
-            cmd = [ffmpeg, "-nostdin", "-threads", "0", "-i", in_path,
-                   "-vn", "-acodec", "copy", "-y", out_path]
+        cmd = [ffmpeg, "-nostdin", "-threads", "0"]
+        if t_start:
+            cmd += ["-ss", t_start]
+        cmd += ["-i", in_path]
+        if t_end:
+            cmd += ["-to", t_end]
+        if can_pass_through(in_path, fmt) and not has_time:
+            cmd += ["-vn", "-acodec", "copy"]
         else:
-            cmd = [ffmpeg, "-nostdin", "-threads", "0", "-i", in_path,
-                   "-vn", "-acodec", codec, "-b:a", br, "-y", out_path]
+            cmd += ["-vn", "-acodec", codec, "-b:a", br]
+        cmd += ["-y", out_path]
+
         rc = run_ffmpeg(cmd)
         store["pct"] = 100
         store["output"] = out_path
         store["status"] = "\u2714 已完成" if rc == 0 else "失败"
+        store["done"] = True
+        if rc == 0:
+            add_history(in_path, "file", out_path)
+
+    _start_job(job)
+    return jsonify({"ok": True})
+
+
+def _api_extract_batch(files: list, fmt: str, qual: str):
+    valid = [f for f in files if isinstance(f, str) and Path(f).is_file()]
+    if not valid:
+        return jsonify({"ok": False, "error": "无有效文件"})
+    if not ensure_ffmpeg():
+        return jsonify({"ok": False, "error": "ffmpeg 失败"})
+
+    store["file_n"] = len(valid)
+    store["file_i"] = 0
+
+    codec = CODEC_MAP.get(fmt, "libmp3lame")
+    br = BITRATE.get(qual, "192k")
+
+    def job():
+        ok_count = 0
+        for i, f in enumerate(valid):
+            if _cancel:
+                break
+            store["file_i"] = i + 1
+            store["pct"] = 0
+            store["status"] = f"提取 {i+1}/{len(valid)}: {Path(f).name[:30]}..."
+            ffmpeg = tool("ffmpeg.exe")
+            out = str(Path(f).with_suffix(f".{fmt}"))
+            if can_pass_through(f, fmt):
+                cmd = [ffmpeg, "-nostdin", "-threads", "0", "-i", f, "-vn", "-acodec", "copy", "-y", out]
+            else:
+                cmd = [ffmpeg, "-nostdin", "-threads", "0", "-i", f, "-vn", "-acodec", codec, "-b:a", br, "-y", out]
+            rc = run_ffmpeg(cmd)
+            if rc == 0 and not _cancel:
+                ok_count += 1
+                add_history(f, "file", out)
+        store["pct"] = 100
+        store["output"] = valid[-1] if valid else ""
+        store["status"] = f"\u2714 {ok_count}/{len(valid)} 完成" if ok_count else "失败"
         store["done"] = True
 
     _start_job(job)
@@ -298,6 +402,7 @@ def api_extract_url():
                         store["status"] = "\u2714 已完成"
                         store["pct"] = 100
                         store["done"] = True
+                        add_history(url, "url", out)
                         return
             except Exception:
                 pass
@@ -327,6 +432,8 @@ def api_extract_url():
                 store["output"] = line.split("Destination:")[-1].strip()
         _proc.wait()
         ok = _proc.returncode == 0
+        if ok and store["output"]:
+            add_history(url, "url", store["output"])
         store["status"] = "\u2714 已完成" if ok else "失败"
         store["pct"] = 100
         store["done"] = True
