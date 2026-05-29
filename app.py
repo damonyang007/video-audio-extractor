@@ -226,6 +226,10 @@ def api_extract_url():
                 ae.store["status"] = s[:60]
             if "[download] Destination:" in line:
                 ae.store["output"] = line.split("Destination:")[-1].strip()
+            if "has already been downloaded" in line:
+                ae.store["output"] = line.split("] ")[-1].split(" has already")[0].strip()
+            if "already in target format" in line:
+                ae.store["output"] = line.split("] Not converting")[0].split("] ")[-1].strip()
         ae._proc.wait()
         ok = ae._proc.returncode == 0
         if ok and ae.store["output"]:
