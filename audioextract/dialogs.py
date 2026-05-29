@@ -1,51 +1,45 @@
-import tkinter as tk
-from tkinter import filedialog
-import threading
+import subprocess
 import json
 
-_action = None
-_result = ""
-_event = threading.Event()
 
-
-def start():
-    root = tk.Tk()
-    root.withdraw()
-
-    def check():
-        global _action, _result
-        if _action:
-            act = _action
-            _action = None
-            if act == "files":
-                paths = filedialog.askopenfilenames(
-                    parent=root, title="选择文件",
-                    filetypes=[("媒体", "*.mp4 *.mkv *.avi *.mov *.wmv *.flv *.webm *.m4v *.mpg *.mpeg *.ts *.rmvb *.3gp *.mp3 *.wav *.aac *.m4a *.ogg *.flac"),
-                               ("所有", "*.*")]
-                )
-                _result = json.dumps(list(paths)) if paths else "[]"
-            elif act == "save":
-                p = filedialog.asksaveasfilename(
-                    parent=root, title="保存文件",
-                    filetypes=[("音频 (mp3)", "*.mp3"), ("音频 (wav)", "*.wav"),
-                               ("音频 (aac)", "*.aac"), ("音频 (m4a)", "*.m4a"),
-                               ("所有", "*.*")],
-                    defaultextension=".mp3"
-                )
-                _result = p or ""
-            elif act == "dir":
-                p = filedialog.askdirectory(parent=root, title="选择保存目录")
-                _result = p or ""
-            _event.set()
-        root.after(100, check)
-
-    root.after(100, check)
-    root.mainloop()
+def _ps_dialog(action: str) -> str:
+    ps = {
+        "files": r"""
+Add-Type -AssemblyName System.Windows.Forms
+$d = New-Object System.Windows.Forms.OpenFileDialog
+$d.Multiselect = $true
+$d.Filter = 'Media|*.mp4;*.mkv;*.avi;*.mov;*.wmv;*.flv;*.webm;*.m4v;*.mpg;*.mpeg;*.ts;*.rmvb;*.3gp;*.mp3;*.wav;*.aac;*.m4a;*.ogg;*.flac|All|*.*'
+$d.Title = '选择文件'
+if ($d.ShowDialog() -eq 'OK') { ConvertTo-Json @($d.FileNames) } else { '[]' }
+""",
+        "save": r"""
+Add-Type -AssemblyName System.Windows.Forms
+$d = New-Object System.Windows.Forms.SaveFileDialog
+$d.Filter = 'MP3|*.mp3|WAV|*.wav|AAC|*.aac|M4A|*.m4a|All|*.*'
+$d.DefaultExt = '.mp3'
+$d.Title = '保存文件'
+if ($d.ShowDialog() -eq 'OK') { Write-Output ($d.FileName -replace '\\','\\') } else { Write-Output '' }
+""",
+        "dir": r"""
+Add-Type -AssemblyName System.Windows.Forms
+$d = New-Object System.Windows.Forms.FolderBrowserDialog
+$d.Description = '选择保存目录'
+if ($d.ShowDialog() -eq 'OK') { Write-Output ($d.SelectedPath -replace '\\','\\') } else { Write-Output '' }
+"""
+    }
+    r = subprocess.run(["powershell", "-STA", "-NoProfile", "-Command", ps[action]],
+                       capture_output=True, text=True, timeout=120)
+    return r.stdout.strip()
 
 
 def request_dialog(action: str) -> str:
-    global _action
-    _event.clear()
-    _action = action
-    _event.wait()
-    return _result
+    raw = _ps_dialog(action)
+    if action in ("save", "dir"):
+        return raw.strip() if raw.strip() else ""
+    if action == "files":
+        try:
+            paths = json.loads(raw)
+            return json.dumps(paths)
+        except Exception:
+            return "[]"
+    return raw
