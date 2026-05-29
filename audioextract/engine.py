@@ -39,30 +39,37 @@ def tool(name: str) -> Optional[str]:
 def ensure_ffmpeg() -> bool:
     if tool("ffmpeg.exe"):
         return True
-    ae.store["status"] = "\u4e0b\u8f7d ffmpeg ~50MB ..."
-    d = exe_dir()
-    zp = d / "ffmpeg-temp.zip"
-    urllib.request.urlretrieve(FFMPEG_ZIP, zp)
-    ae.store["status"] = "\u89e3\u538b ffmpeg ..."
-    with zipfile.ZipFile(zp, "r") as z:
-        for m in z.namelist():
-            name = Path(m).name
-            if name in ("ffmpeg.exe", "ffprobe.exe"):
-                (d / name).write_bytes(z.read(m))
-    zp.unlink()
-    ae.store["status"] = "\u5c31\u7eea"
-    return True
+    try:
+        ae.store["status"] = "下载 ffmpeg ~50MB ..."
+        d = exe_dir()
+        zp = d / "ffmpeg-temp.zip"
+        urllib.request.urlretrieve(FFMPEG_ZIP, zp)
+        ae.store["status"] = "解压 ffmpeg ..."
+        with zipfile.ZipFile(zp, "r") as z:
+            for m in z.namelist():
+                name = Path(m).name
+                if name in ("ffmpeg.exe", "ffprobe.exe"):
+                    (d / name).write_bytes(z.read(m))
+        zp.unlink()
+        ae.store["status"] = "就绪"
+        return True
+    except Exception as e:
+        ae.store["status"] = f"ffmpeg 下载失败: {e}"
+        return False
 
 
 def ensure_ytdlp() -> str:
     p = tool("yt-dlp.exe")
     if p:
         return p
-    local = exe_dir() / "yt-dlp.exe"
-    ae.store["status"] = "\u4e0b\u8f7d yt-dlp ~10MB ..."
-    urllib.request.urlretrieve(YTDLP_EXE, local)
-    ae._cache["yt-dlp.exe"] = str(local)
-    return str(local)
+    try:
+        local = exe_dir() / "yt-dlp.exe"
+        ae.store["status"] = "下载 yt-dlp ~10MB ..."
+        urllib.request.urlretrieve(YTDLP_EXE, local)
+        ae._cache["yt-dlp.exe"] = str(local)
+        return str(local)
+    except Exception as e:
+        raise RuntimeError(f"yt-dlp download failed: {e}")
 
 
 def can_pass_through(in_path: str, fmt: str) -> bool:
@@ -98,21 +105,9 @@ def run_ffmpeg(cmd: list) -> int:
         if ae._cancel:
             ae._proc.terminate()
             break
-        if "time=" in line:
-            try:
-                h, m, s = line.split("time=")[1].split()[0].split(":")
-                sec = float(h) * 3600 + float(m) * 60 + float(s)
-                if duration and sec > 0:
-                    ae.store["pct"] = min(sec / duration * 100, 100)
-            except Exception:
-                pass
-        elif duration is None and "Duration:" in line:
-            try:
-                h, m, s = line.split("Duration:")[1].split(",")[0].strip().split(":")
-                duration = float(h) * 3600 + float(m) * 60 + float(s)
-            except Exception:
-                pass
     ae._proc.wait()
+    if ae._cancel:
+        return -1
     return ae._proc.returncode
 
 
@@ -126,6 +121,7 @@ def start_job(fn):
     ae.store["pct"] = 0
     ae.store["done"] = False
     ae.store["output"] = ""
+    ae.store["done_seq"] += 1
     threading.Thread(target=fn, daemon=True).start()
 
 

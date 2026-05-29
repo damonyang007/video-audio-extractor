@@ -1,4 +1,6 @@
 document.addEventListener('alpine:init', () => {
+  let _lastDoneSeq = 0
+
   Alpine.store('progress', {
     pct: 0, status: '待命', dotColor: 'var(--dim)',
     output: '', done: false, file_i: 0, file_n: 0, eta: '', startTime: 0
@@ -27,7 +29,11 @@ document.addEventListener('alpine:init', () => {
     const ok = d.status && d.status.includes('\u2714')
     const err = d.status && (d.status.includes('\u5931') || d.status.includes('\u53d6\u6d88'))
     s.dotColor = ok ? 'var(--success)' : err ? 'var(--primary)' : 'var(--primary)'
-    if (d.done) { s.done = true; s.eta = ''; notify(d.status, d.output) }
+    if (d.done && d.done_seq !== _lastDoneSeq) {
+      _lastDoneSeq = d.done_seq
+      s.done = true; s.eta = ''
+      notify(d.status, d.output)
+    }
   }
 })
 

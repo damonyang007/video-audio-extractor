@@ -4,10 +4,10 @@ import subprocess
 import threading
 import json
 from pathlib import Path
-from flask import Flask, request, jsonify, render_template, Response
+from flask import Flask, request, jsonify, render_template, Response, send_file
 
 import audioextract as ae
-from audioextract import engine, douyin, bilibili, youtube, history, dialogs
+from audioextract import engine, douyin, bilibili, youtube, history, config, dialogs
 
 app = Flask(__name__)
 
@@ -32,28 +32,18 @@ def api_video():
     p = request.args.get("path", "")
     if not p or not Path(p).is_file():
         return "not found", 404
-    return Response(_stream_file(p), mimetype="video/mp4",
-                    headers={"Accept-Ranges": "bytes",
-                             "Content-Length": str(Path(p).stat().st_size)})
-
-
-def _stream_file(path: str):
-    with open(path, "rb") as f:
-        while chunk := f.read(8192):
-            yield chunk
-
-
-@app.route("/api/config", methods=["GET", "POST"])
-def api_config():
-    if request.method == "GET":
-        return jsonify(history.load())
-    history.save(request.json or {})
-    return jsonify({"ok": True})
+    return send_file(Path(p), mimetype="video/mp4")
 
 
 @app.route("/api/select-files")
 def api_select_files():
     return jsonify({"paths": json.loads(dialogs.request_dialog("files"))})
+
+
+@app.route("/api/select-file")
+def api_select_file():
+    paths = json.loads(dialogs.request_dialog("files"))
+    return jsonify({"path": paths[0] if paths else ""})
 
 
 @app.route("/api/select-save")
@@ -125,6 +115,7 @@ def api_extract_file():
             c += ["-vn", "-acodec", codec, "-b:a", br]
         c += ["-y", out_path]
         rc = engine.run_ffmpeg(c)
+        if rc == -1: return
         ae.store.update({"pct": 100, "output": out_path,
                         "status": "\u2714 \u5df2\u5b8c\u6210" if rc == 0 else "\u5931\u8d25", "done": True})
         if rc == 0:
@@ -195,7 +186,8 @@ def api_extract_url():
                         c = [engine.tool("ffmpeg.exe"), "-nostdin", "-threads", "0", "-headers",
                              f"User-Agent: {engine.MOBILE_UA}\r\nReferer: https://www.iesdouyin.com/",
                              "-i", vurl, "-vn", "-acodec", codec, "-b:a", br, "-y", out]
-                        if engine.run_ffmpeg(c) == 0:
+                        rc = engine.run_ffmpeg(c)
+                        if rc == 0:
                             ae.store.update({"output": out, "status": "\u2714 \u5df2\u5b8c\u6210", "pct": 100, "done": True})
                             history.add(url, "url", out)
                             return
