@@ -7,7 +7,12 @@
          @dragleave="dragOver=false" @drop.prevent="handleConvDrop"
          tabindex="0" @keydown.enter="selectConvFile">
       <template x-if="!convPath"><div>选择要转换的音频文件</div></template>
-      <template x-if="convPath"><div x-text="convPath.split('\\\\').pop()" style="color:var(--white)"></div></template>
+      <template x-if="convPath">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span x-text="convPath.split('\\\\').pop()" style="color:var(--white);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1"></span>
+          <span @click.stop="clearConv" style="color:var(--primary);cursor:pointer;font-size:18px;padding:0 4px;flex-shrink:0">&times;</span>
+        </div>
+      </template>
     </div>
     <div class="settings-grid" style="margin-top:14px">
       <div class="field"><label class="label">输出格式</label><select x-model="convFmt"><option>mp3</option><option>wav</option><option>aac</option><option>m4a</option><option>ogg</option><option>flac</option></select></div>

@@ -74,6 +74,7 @@ function app() {
       this.filePath = p
       this.localOut = p.split('\\').pop().replace(/\.[^.]+$/, '') + '.' + this.localFmt
     },
+    clearFile() { this.filePath = ''; this.localOut = ''; this.tStart = ''; this.tEnd = '' },
     handleDrop(e) {
       this.dragOver = false
       const f = e.dataTransfer.files
@@ -111,6 +112,7 @@ function app() {
       const r = await fetch('/api/select-file'); const d = await r.json()
       if (d.path) { this.convPath = d.path; this.convOut = d.path.replace(/\.[^.]+$/, '') + '.' + this.convFmt }
     },
+    clearConv() { this.convPath = ''; this.convOut = '' },
     handleConvDrop(e) {
       this.dragOver = false
       const f = e.dataTransfer.files
