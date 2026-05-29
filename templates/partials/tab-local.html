@@ -9,30 +9,28 @@
       </div>
       <div class="batch-list" x-show="batchFiles.length>0">
         <template x-for="(f,i) in batchFiles" :key="i">
-          <div class="batch-item">
+          <div class="batch-item" @click="previewFile=f">
             <span class="name" x-text="f.split('\\\\').pop()"></span>
-            <span class="del" @click="batchFiles.splice(i,1)">&times;</span>
+            <span class="del" @click.stop="batchFiles.splice(i,1);if(previewFile===f)previewFile=batchFiles[0]||''">&times;</span>
           </div>
         </template>
       </div>
       <div x-show="batchFiles.length>0" style="margin-top:8px">
         <span style="font-size:12px;color:var(--sub)"
               x-text="batchFiles.length===1?'1 个文件':batchFiles.length+' 个文件'"></span>
-        <button class="btn btn-sm btn-danger" style="float:right" @click="batchFiles=[];filePath='';localOut='';tStart='';tEnd=''">清空</button>
+        <button class="btn btn-sm btn-danger" style="float:right" @click="batchFiles=[];previewFile='';localOut='';tStart='';tEnd=''">清空</button>
       </div>
 
-      <!-- Trim player: only show when exactly 1 file -->
-      <div x-show="batchFiles.length===1" style="margin-top:14px">
+      <!-- Trim player: show when files exist -->
+      <div x-show="batchFiles.length>0" style="margin-top:14px">
         <div class="card" style="background:var(--input);padding:12px;border-radius:10px">
           <div class="card-title" style="margin-bottom:8px;font-size:13px;display:flex;justify-content:space-between">
-            音频裁剪
-            <span style="font-weight:400;font-size:11px;color:var(--dim)">
-              <span x-text="tStart||'0:00'"></span> — <span x-text="tEnd||'结尾'"></span>
-            </span>
+            视频预览
+            <span style="font-weight:400;font-size:11px;color:var(--dim)" x-text="previewFile ? previewFile.split('\\\\').pop() : '点击列表中的文件预览'"></span>
           </div>
-          <video :src="'/api/video?path='+encodeURIComponent(batchFiles[0])" style="width:100%;border-radius:8px;max-height:160px;background:#000"
+          <video :src="previewFile?'/api/video?path='+encodeURIComponent(previewFile):''" style="width:100%;border-radius:8px;max-height:160px;background:#000"
                  controls id="player" preload="metadata"></video>
-          <div class="row" style="margin-top:10px;gap:6px">
+          <div x-show="previewFile" class="row" style="margin-top:10px;gap:6px">
             <button class="btn btn-sm" @click="setStart" style="flex:1">设为起始</button>
             <button class="btn btn-sm" @click="setEnd" style="flex:1">设为结束</button>
             <button class="btn btn-sm" @click="resetTrim">重置</button>

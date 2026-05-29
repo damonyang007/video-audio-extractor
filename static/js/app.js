@@ -2,7 +2,7 @@ function app() {
   return {
     // ---- State ----
     tab: 'local',
-    batchFiles: [], dragOver: false,
+    batchFiles: [], dragOver: false, previewFile: '',
     tStart: '', tEnd: '', showPlayer: false,
     localFmt: 'mp3', localQual: 'medium', localOut: '',
     urlFmt: 'mp3', urlQual: 'medium', urlDir: '', urlText: '',
@@ -47,6 +47,7 @@ function app() {
       }
       if (this.batchFiles.length === 1) {
         this.localOut = this.batchFiles[0].split('\\').pop().replace(/\.[^.]+$/, '') + '.' + this.localFmt
+        this.previewFile = this.batchFiles[0]
       } else {
         this.localOut = ''
       }
