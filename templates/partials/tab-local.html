@@ -30,6 +30,14 @@
           </div>
           <video :src="previewFile?'/api/video?path='+encodeURIComponent(previewFile):''" style="width:100%;border-radius:8px;max-height:160px;background:#000"
                  controls id="player" preload="metadata"></video>
+          <div x-show="previewFile" style="text-align:center;margin-top:8px;font-size:12px;color:var(--sub)">
+            <span x-show="!tStart && !tEnd">拖动进度条定位，点击下方按钮标记起止点</span>
+            <span x-show="tStart||tEnd" style="font-weight:700;color:var(--white)">
+              <span x-show="tStart" style="color:var(--success)" x-text="'选自 '+tStart"></span>
+              <span x-show="tStart&&tEnd" style="color:var(--dim)"> — </span>
+              <span x-show="tEnd" style="color:var(--primary)" x-text="'至 '+tEnd"></span>
+            </span>
+          </div>
           <div x-show="previewFile" class="row" style="margin-top:10px;gap:6px">
             <button class="btn btn-sm" @click="setStart" style="flex:1">设为起始</button>
             <button class="btn btn-sm" @click="setEnd" style="flex:1">设为结束</button>
