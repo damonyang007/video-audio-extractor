@@ -38,9 +38,11 @@ store = {"pct": 0, "status": "\u5f85\u547d", "output": "", "done": False,
 _cache = {}
 _cancel = False
 _proc = None
+import queue
+
 _root = None
-_dialogs: list[str] = []
-_results: list[str] = []
+_dialogs: queue.Queue = queue.Queue()
+_results: queue.Queue = queue.Queue()
 
 
 def exe_dir() -> Path:
@@ -243,26 +245,20 @@ def _stream_file(path: str):
 
 @app.route("/api/select-file")
 def api_select_file():
-    _dialogs.append("file")
-    while not _results:
-        import time; time.sleep(0.05)
-    return jsonify({"path": _results.pop(0)})
+    _dialogs.put("file")
+    return jsonify({"path": _results.get()})
 
 
 @app.route("/api/select-save")
 def api_select_save():
-    _dialogs.append("save")
-    while not _results:
-        import time; time.sleep(0.05)
-    return jsonify({"path": _results.pop(0)})
+    _dialogs.put("save")
+    return jsonify({"path": _results.get()})
 
 
 @app.route("/api/select-dir")
 def api_select_dir():
-    _dialogs.append("dir")
-    while not _results:
-        import time; time.sleep(0.05)
-    return jsonify({"path": _results.pop(0)})
+    _dialogs.put("dir")
+    return jsonify({"path": _results.get()})
 
 
 @app.route("/api/cancel", methods=["POST"])
@@ -488,19 +484,20 @@ def main():
     global _root
     _root = tk.Tk()
     _root.withdraw()
-    while True:
-        if _dialogs:
-            act = _dialogs.pop(0)
+
+    def check():
+        try:
+            act = _dialogs.get(timeout=0.1)
             if act == "file":
                 p = filedialog.askopenfilename(
                     parent=_root, title="选择视频文件",
                     filetypes=[("视频", "*.mp4 *.mkv *.avi *.mov *.wmv *.flv *.webm *.m4v *.mpg *.mpeg *.ts *.rmvb *.3gp"),
                                ("所有", "*.*")]
                 )
-                _results.append(p or "")
+                _results.put(p or "")
             elif act == "dir":
                 p = filedialog.askdirectory(parent=_root, title="选择保存目录")
-                _results.append(p or "")
+                _results.put(p or "")
             elif act == "save":
                 p = filedialog.asksaveasfilename(
                     parent=_root, title="保存音频文件",
@@ -509,11 +506,13 @@ def main():
                                ("所有", "*.*")],
                     defaultextension=".mp3"
                 )
-                _results.append(p or "")
-        try:
-            _root.update()
-        except Exception:
-            break
+                _results.put(p or "")
+        except queue.Empty:
+            pass
+        _root.after(100, check)
+
+    _root.after(100, check)
+    _root.mainloop()
 
 
 if __name__ == "__main__":
