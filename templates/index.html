@@ -1,341 +1,397 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>AudioExtract</title>
 <style>
 :root {
-  --bg: #000;
-  --card: #161823;
-  --border: #2a2b3d;
-  --input: #1e1f2c;
-  --pink: #fe2c55;
-  --pink-h: #e0264c;
+  --bg: #0f0f1a;
+  --card: #1a1a2e;
+  --border: #2d2d45;
+  --input: #16162b;
+  --primary: #fe2c55;
+  --primary-h: #e0264c;
+  --primary-glow: rgba(254,44,85,0.25);
+  --accent: #7c3aed;
+  --accent-h: #6d28d9;
   --cyan: #20d5ec;
-  --white: #fff;
-  --sub: #a8a9b4;
-  --dim: #5a5b6a;
+  --white: #f8fafc;
+  --sub: #94a3b8;
+  --dim: #5a5b7a;
+  --success: #22c55e;
+  --radius: 12px;
+  --transition: 180ms cubic-bezier(.4,0,.2,1);
 }
-* { margin: 0; padding: 0; box-sizing: border-box; }
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-family: 'Outfit', -apple-system, 'Segoe UI', system-ui, sans-serif;
   background: var(--bg);
   color: var(--white);
   min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  padding: 24px 20px;
+  display: flex; justify-content: center;
+  padding: 28px 20px 40px;
 }
-.container { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 14px; }
+.container { width:100%; max-width:500px; display:flex; flex-direction:column; gap:16px; }
 
-.header { display: flex; align-items: center; gap: 12px; padding: 6px 0; }
-.logo { display: flex; gap: 3px; align-items: flex-end; height: 32px; }
-.logo-bar { width: 6px; background: var(--pink); border-radius: 3px; }
-.logo-bar:nth-child(1) { height: 14px; }
-.logo-bar:nth-child(2) { height: 22px; }
-.logo-bar:nth-child(3) { height: 30px; }
-.logo-bar:nth-child(4) { height: 20px; }
-.title { font-size: 20px; font-weight: 800; }
-.subtitle { font-size: 12px; color: var(--sub); }
+.header { display:flex; align-items:center; gap:14px; padding:4px 0 8px; }
+.logo-icon { width:38px; height:38px; flex-shrink:0; }
+.title { font-size:22px; font-weight:800; letter-spacing:-0.5px; }
+.subtitle { font-size:13px; color:var(--sub); margin-top:1px; }
 
-.tabs {
-  display: flex; background: var(--card); border-radius: 10px; padding: 3px; gap: 3px;
+.tab-bar { display:flex; background:var(--card); border-radius:10px; padding:4px; gap:4px; }
+.tab-btn {
+  flex:1; text-align:center; padding:12px; border-radius:8px; cursor:pointer;
+  font-size:14px; font-weight:600; color:var(--sub); transition:all var(--transition);
+  border:none; background:none; font-family:inherit; outline:none;
+  position:relative;
 }
-.tab {
-  flex: 1; text-align: center; padding: 10px; border-radius: 8px;
-  cursor: pointer; font-size: 14px; font-weight: 600; color: var(--sub);
-  transition: all .2s; border: none; background: none;
-}
-.tab.active { background: var(--pink); color: var(--white); }
+.tab-btn:focus-visible { box-shadow:0 0 0 2px var(--primary); }
+.tab-btn.active { background:var(--primary); color:var(--white); }
 
 .card {
-  background: var(--card); border-radius: 10px; padding: 18px; border: 1px solid var(--border);
+  background:var(--card); border-radius:var(--radius); padding:20px;
+  border:1px solid var(--border); transition:border-color var(--transition);
 }
-.card-title { font-size: 14px; font-weight: 700; margin-bottom: 12px; }
-.card-label { font-size: 12px; color: var(--sub); margin-bottom: 6px; }
+.card:hover { border-color:var(--dim); }
+.card-title { font-size:15px; font-weight:700; margin-bottom:14px; letter-spacing:-0.3px; }
 
-input[type="text"], .file-box {
-  width: 100%;
-  background: var(--input);
-  border: none;
-  border-radius: 8px;
-  padding: 12px 14px;
-  color: var(--white);
-  font-size: 13px;
-  outline: none;
-  font-family: inherit;
+label.label { display:block; font-size:12px; color:var(--sub); margin-bottom:6px; font-weight:500; }
+
+input[type="text"], .file-box, select {
+  width:100%; background:var(--input); border:1px solid transparent;
+  border-radius:8px; padding:12px 14px; color:var(--white); font-size:13px;
+  outline:none; font-family:inherit; transition:all var(--transition);
 }
+input[type="text"]:focus, select:focus { border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-glow); }
+input::placeholder { color:var(--dim); }
 .file-box {
-  color: var(--dim);
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  cursor: pointer;
-  user-select: none;
+  color:var(--dim); cursor:pointer; user-select:none;
+  overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
 }
-input::placeholder { color: var(--dim); }
+.file-box.filled { color:var(--white); }
+.file-box:hover { border-color:var(--dim); }
 
-.input-row { display: flex; gap: 8px; align-items: center; }
-.input-row input { flex: 1; }
+.row { display:flex; gap:10px; align-items:center; }
+.row.grow > :first-child { flex:1; }
+
+select { cursor:pointer; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8'%3E%3Cpath d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:32px; }
 
 .btn {
-  background: var(--pink); color: var(--white); border: none; border-radius: 8px;
-  padding: 10px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
-  white-space: nowrap; transition: all .15s; font-family: inherit;
+  background:var(--card); color:var(--sub); border:1px solid var(--border);
+  border-radius:8px; padding:10px 16px; font-size:13px; font-weight:600;
+  cursor:pointer; transition:all var(--transition); font-family:inherit;
+  outline:none; white-space:nowrap;
 }
-.btn:hover { background: var(--pink-h); }
-.btn:active { transform: scale(.97); }
-.btn.small { padding: 8px 12px; font-size: 12px; background: var(--input); color: var(--sub); }
-.btn.small:hover { background: var(--border); color: var(--white); }
-.btn.big {
-  width: 100%; padding: 14px; font-size: 16px; font-weight: 700;
-  border-radius: 10px; margin-top: 6px;
-}
-.btn.big:disabled { background: var(--border); color: var(--dim); cursor: default; transform: none; }
+.btn:hover { background:var(--border); color:var(--white); }
+.btn:focus-visible { box-shadow:0 0 0 2px var(--primary); }
+.btn:active { transform:scale(.97); }
 
-.settings-row { display: flex; gap: 12px; margin-top: 10px; }
-.field { display: flex; flex-direction: column; gap: 4px; }
-.field label { font-size: 11px; color: var(--dim); }
-.field select {
-  background: var(--input); border: none; border-radius: 6px; padding: 8px 10px;
-  color: var(--white); font-size: 13px; outline: none; font-family: inherit; cursor: pointer;
+.btn-primary {
+  width:100%; padding:15px; font-size:16px; font-weight:700; margin-top:4px;
+  background:linear-gradient(135deg, var(--primary), var(--accent));
+  color:var(--white); border:none; border-radius:var(--radius);
+  cursor:pointer; transition:all var(--transition); font-family:inherit;
+  outline:none; letter-spacing:-0.3px; position:relative; overflow:hidden;
 }
+.btn-primary::after {
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(135deg, var(--accent), var(--primary));
+  opacity:0; transition:opacity var(--transition);
+}
+.btn-primary:hover::after { opacity:1; }
+.btn-primary span { position:relative; z-index:1; }
+.btn-primary:focus-visible { box-shadow:0 0 0 3px var(--primary-glow); }
+.btn-primary:active { transform:scale(.98); }
+.btn-primary:disabled { opacity:.5; cursor:default; transform:none; }
+.btn-primary:disabled::after { opacity:0; }
 
-.progress-wrap { margin-top: 6px; }
+.settings-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.field { display:flex; flex-direction:column; gap:5px; }
+
+.progress-wrap { margin-top:2px; }
 .progress-bar {
-  width: 100%; height: 3px; background: var(--border); border-radius: 3px; overflow: hidden;
+  width:100%; height:4px; background:var(--border); border-radius:4px; overflow:hidden;
 }
 .progress-fill {
-  height: 100%; background: linear-gradient(90deg, var(--pink), var(--cyan));
-  border-radius: 3px; transition: width .3s; width: 0;
+  height:100%; background:linear-gradient(90deg, var(--primary), var(--accent), var(--cyan));
+  border-radius:4px; transition:width .4s cubic-bezier(.4,0,.2,1);
 }
 .status-row {
-  display: flex; align-items: center; gap: 8px; margin-top: 6px;
-  font-size: 12px; color: var(--sub);
+  display:flex; align-items:center; gap:8px; margin-top:8px;
+  font-size:12px; color:var(--sub);
 }
-.status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.status-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; transition:background var(--transition); }
 
-.result { margin-top: 10px; text-align: center; }
-.result a {
-  color: var(--cyan); text-decoration: none; font-size: 13px; cursor: pointer;
+.result-link {
+  display:block; text-align:center; color:var(--cyan); text-decoration:none;
+  font-size:13px; font-weight:500; cursor:pointer; margin-top:12px;
+  transition:opacity var(--transition);
 }
-.result a:hover { text-decoration: underline; }
-.hint { font-size: 11px; color: var(--dim); margin-top: 4px; }
+.result-link:hover { text-decoration:underline; opacity:.8; }
 
-.skeleton {
-  background: linear-gradient(90deg, var(--card) 25%, var(--border) 50%, var(--card) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: 8px;
-}
+.hint { font-size:11px; color:var(--dim); margin-top:5px; }
 
+/* Loading */
+@keyframes spin { to { transform:rotate(360deg); } }
 @keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% { background-position:200% 0; }
+  100% { background-position:-200% 0; }
+}
+[x-cloak] { display:none !important; }
+.loading-screen {
+  position:fixed; inset:0; background:var(--bg);
+  display:flex; align-items:center; justify-content:center;
+  flex-direction:column; gap:16px; z-index:100;
+  transition:opacity .3s;
+}
+.spinner {
+  width:36px; height:36px; border:3px solid var(--border);
+  border-top-color:var(--primary); border-radius:50%;
+  animation:spin .7s linear infinite;
 }
 
-.loading-overlay {
-  position: fixed; inset: 0; background: var(--bg);
-  display: flex; align-items: center; justify-content: center;
-  flex-direction: column; gap: 16px; z-index: 100;
-  transition: opacity .3s;
+/* Toast */
+.toast {
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+  background:var(--card); border:1px solid var(--border);
+  border-radius:10px; padding:12px 20px; font-size:13px;
+  z-index:200; box-shadow:0 8px 32px rgba(0,0,0,.5);
 }
-.loading-dot {
-  width: 40px; height: 40px;
-  border: 3px solid var(--border);
-  border-top-color: var(--pink);
-  border-radius: 50%;
-  animation: spin .8s linear infinite;
+.toast-error { border-color:var(--primary); }
+
+@media (max-width:480px) {
+  body { padding:16px 12px 32px; }
+  .card { padding:16px; }
+  .settings-grid { grid-template-columns:1fr; }
 }
-@keyframes spin { to { transform: rotate(360deg); } }
-.loading-text { font-size: 13px; color: var(--sub); }
+
+@media (prefers-reduced-motion:reduce) {
+  *, *::before, *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; }
+}
 </style>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body>
 
-<div class="loading-overlay" id="loading">
-  <div class="loading-dot"></div>
-  <div class="loading-text">Loading...</div>
+<div class="loading-screen" id="ld" x-data>
+  <div class="spinner"></div>
+  <div style="font-size:13px;color:var(--sub)">Loading AudioExtract...</div>
 </div>
-<div class="container">
-  <div class="header">
-    <div class="logo">
-      <div class="logo-bar"></div><div class="logo-bar"></div>
-      <div class="logo-bar"></div><div class="logo-bar"></div>
-    </div>
+
+<div class="container" x-data="app()" x-cloak @keydown.escape="toast=''">
+
+  <header class="header">
+    <svg class="logo-icon" viewBox="0 0 38 38" fill="none">
+      <defs><linearGradient id="lg" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stop-color="var(--primary)"/><stop offset="100%" stop-color="var(--accent)"/></linearGradient></defs>
+      <rect x="6" y="18" width="5" height="14" rx="2.5" fill="url(#lg)"/>
+      <rect x="14" y="10" width="5" height="22" rx="2.5" fill="url(#lg)" opacity=".85"/>
+      <rect x="22" y="4" width="5" height="28" rx="2.5" fill="url(#lg)" opacity=".7"/>
+      <rect x="30" y="14" width="5" height="18" rx="2.5" fill="url(#lg)" opacity=".55"/>
+    </svg>
     <div>
       <div class="title">AudioExtract</div>
       <div class="subtitle">提取视频音频，一键搞定</div>
     </div>
-  </div>
+  </header>
 
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('local')">本地文件</button>
-    <button class="tab" onclick="switchTab('url')">在线链接</button>
-  </div>
+  <nav class="tab-bar" role="tablist" aria-label="功能切换">
+    <button class="tab-btn" :class="{active:tab==='local'}" role="tab" aria-selected="true"
+            @click="tab='local'" @keydown.enter="tab='local'" x-bind:tabindex="tab==='local'?0:-1">
+      本地文件
+    </button>
+    <button class="tab-btn" :class="{active:tab==='url'}" role="tab" aria-selected="false"
+            @click="tab='url'" @keydown.enter="tab='url'" x-bind:tabindex="tab==='url'?0:-1">
+      在线链接
+    </button>
+  </nav>
 
-  <div id="tab-local">
+  <!-- LOCAL TAB -->
+  <section x-show="tab==='local'" role="tabpanel">
     <div class="card">
       <div class="card-title">视频文件</div>
-      <div class="input-row">
-        <div class="file-box" id="file-display" onclick="selectFile()">点击选择文件...</div>
-        <button class="btn small" onclick="selectFile()">浏览</button>
+      <label class="label" for="file-display">选择视频</label>
+      <div class="row grow">
+        <div class="file-box" :class="{filled:!!filePath}" id="file-display" tabindex="0"
+             role="button" aria-label="选择视频文件"
+             @click="selectFile" @keydown.enter="selectFile"
+             x-text="filePath ? filePath.split('\\\\').pop() : '点击选择文件...'">
+        </div>
+        <button class="btn" @click="selectFile">浏览</button>
       </div>
     </div>
     <div class="card">
       <div class="card-title">输出设置</div>
-      <div class="settings-row">
+      <div class="settings-grid">
         <div class="field">
-          <label>格式</label>
-          <select id="local-fmt"><option>mp3</option><option>wav</option><option>aac</option><option>m4a</option><option>ogg</option><option>flac</option></select>
+          <label class="label" for="local-fmt">格式</label>
+          <select id="local-fmt" x-model="localFmt">
+            <option>mp3</option><option>wav</option><option>aac</option>
+            <option>m4a</option><option>ogg</option><option>flac</option>
+          </select>
         </div>
         <div class="field">
-          <label>音质</label>
-          <select id="local-qual"><option value="low">低 (128k)</option><option value="medium" selected>中 (192k)</option><option value="high">高 (320k)</option></select>
+          <label class="label" for="local-qual">音质</label>
+          <select id="local-qual" x-model="localQual">
+            <option value="low">低 (128k)</option>
+            <option value="medium">中 (192k)</option>
+            <option value="high">高 (320k)</option>
+          </select>
         </div>
       </div>
-      <div class="card-label" style="margin-top:14px">保存至</div>
-      <input type="text" id="local-out" placeholder="自动生成...">
+      <label class="label" for="local-out" style="margin-top:14px">保存至</label>
+      <input type="text" id="local-out" x-model="localOut" placeholder="自动生成..." autocomplete="off">
     </div>
-  </div>
+  </section>
 
-  <div id="tab-url" style="display:none">
+  <!-- URL TAB -->
+  <section x-show="tab==='url'" role="tabpanel">
     <div class="card">
       <div class="card-title">视频链接</div>
-      <input type="text" id="url-text" placeholder="粘贴抖音、B 站链接，自动识别...">
-      <div class="hint">从复制文字中自动识别</div>
+      <label class="label" for="url-text">粘贴链接</label>
+      <input type="text" id="url-text" x-model="urlText" placeholder="粘贴抖音、B 站链接，自动识别..." autocomplete="off">
+      <div class="hint">从复制文字中自动识别链接</div>
     </div>
     <div class="card">
       <div class="card-title">输出设置</div>
-      <div class="settings-row">
+      <div class="settings-grid">
         <div class="field">
-          <label>格式</label>
-          <select id="url-fmt"><option>mp3</option><option>wav</option><option>aac</option><option>m4a</option><option>ogg</option><option>flac</option></select>
+          <label class="label" for="url-fmt">格式</label>
+          <select id="url-fmt" x-model="urlFmt">
+            <option>mp3</option><option>wav</option><option>aac</option>
+            <option>m4a</option><option>ogg</option><option>flac</option>
+          </select>
         </div>
         <div class="field">
-          <label>音质</label>
-          <select id="url-qual"><option value="low">低 (128k)</option><option value="medium" selected>中 (192k)</option><option value="high">高 (320k)</option></select>
+          <label class="label" for="url-qual">音质</label>
+          <select id="url-qual" x-model="urlQual">
+            <option value="low">低 (128k)</option>
+            <option value="medium">中 (192k)</option>
+            <option value="high">高 (320k)</option>
+          </select>
         </div>
       </div>
-      <div class="card-label" style="margin-top:14px">保存目录</div>
-      <div class="input-row">
-        <input type="text" id="url-dir" placeholder="下载目录">
-        <button class="btn small" onclick="selectDir()">浏览</button>
+      <label class="label" for="url-dir" style="margin-top:14px">保存目录</label>
+      <div class="row grow">
+        <input type="text" id="url-dir" x-model="urlDir" placeholder="下载目录" autocomplete="off">
+        <button class="btn" @click="selectDir">浏览</button>
       </div>
     </div>
-  </div>
+  </section>
 
-  <button class="btn big" id="extract-btn" onclick="doExtract()">
-    &#9654;&#65039; 提取音频
+  <button class="btn-primary" :disabled="working" @click="doExtract">
+    <span x-text="working ? '··· 提取中' : '提取音频'"></span>
   </button>
 
   <div class="progress-wrap">
-    <div class="progress-bar"><div class="progress-fill" id="fill"></div></div>
+    <div class="progress-bar">
+      <div class="progress-fill" :style="`width:${$store.progress.percent}%`"></div>
+    </div>
     <div class="status-row">
-      <div class="status-dot" id="dot" style="background:var(--dim)"></div>
-      <span id="status">待命</span>
+      <div class="status-dot" :style="`background:${$store.progress.dotColor}`"></div>
+      <span x-text="$store.progress.status"></span>
     </div>
   </div>
 
-  <div class="result" id="result"></div>
+  <a class="result-link" x-show="$store.progress.output" href="#" @click.prevent="openFolder"
+     x-text="'打开文件夹: ' + shortDir($store.progress.output) + ' \u2197'">
+  </a>
+</div>
+
+<div class="toast" :class="{'toast-error':toastError}" x-show="toast" x-text="toast"
+     x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4"
+     @click="toast=''" style="display:none">
 </div>
 
 <script>
-let tab = "local";
-let filePath = "";
-
-function switchTab(t) {
-  tab = t;
-  document.querySelectorAll(".tab").forEach((el,i) => {
-    el.classList.toggle("active", (i===0 && t==="local") || (i===1 && t==="url"));
-  });
-  document.getElementById("tab-local").style.display = t === "local" ? "block" : "none";
-  document.getElementById("tab-url").style.display = t === "url" ? "block" : "none";
-}
-
-async function selectFile() {
-  const r = await fetch("/api/select-file");
-  const d = await r.json();
-  if (d.path) {
-    filePath = d.path;
-    const name = d.path.split("\\").pop();
-    document.getElementById("file-display").textContent = name;
-    document.getElementById("file-display").style.color = "var(--white)";
-    const base = name.replace(/\.[^.]+$/,"");
-    const fmt = document.getElementById("local-fmt").value;
-    document.getElementById("local-out").value = base + "." + fmt;
-  }
-}
-
-async function selectDir() {
-  const r = await fetch("/api/select-dir");
-  const d = await r.json();
-  if (d.path) document.getElementById("url-dir").value = d.path;
-}
-
-function doExtract() {
-  const btn = document.getElementById("extract-btn");
-  btn.disabled = true;
-  btn.textContent = "\u00b7\u00b7\u00b7 \u63d0\u53d6\u4e2d";
-  document.getElementById("dot").style.background = "var(--pink)";
-  document.getElementById("status").textContent = "\u51c6\u5907\u4e2d ...";
-  document.getElementById("result").innerHTML = "";
-
-  if (tab === "local") {
-    if (!filePath) { reset(); alert("\u8bf7\u5148\u9009\u62e9\u6587\u4ef6"); return; }
-    fetch("/api/extract-file", {
-      method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({
-        input: filePath,
-        output: document.getElementById("local-out").value,
-        format: document.getElementById("local-fmt").value,
-        quality: document.getElementById("local-qual").value
+function app() {
+  return {
+    tab: 'local',
+    filePath: '',
+    localFmt: 'mp3', localQual: 'medium', localOut: '',
+    urlFmt: 'mp3', urlQual: 'medium', urlDir: '',
+    urlText: '',
+    working: false,
+    toast: '', toastError: false,
+    init() {
+      this.$watch('$store.progress.done', v => {
+        if (v) { this.working = false; Alpine.store('progress').done = false }
       })
-    });
-  } else {
-    const u = document.getElementById("url-text").value.trim();
-    if (!u) { reset(); alert("\u8bf7\u8f93\u5165\u94fe\u63a5"); return; }
-    fetch("/api/extract-url", {
-      method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({
-        url: u,
-        output_dir: document.getElementById("url-dir").value,
-        format: document.getElementById("url-fmt").value,
-        quality: document.getElementById("url-qual").value
-      })
-    });
-  }
-}
+    },
 
-function reset() {
-  const btn = document.getElementById("extract-btn");
-  btn.disabled = false;
-  btn.textContent = "\u25b6\ufe0f \u63d0\u53d6\u97f3\u9891";
-  document.getElementById("dot").style.background = "var(--dim)";
-}
+    async selectFile() {
+      const r = await fetch('/api/select-file'); const d = await r.json()
+      if (d.path) {
+        this.filePath = d.path
+        const name = d.path.split('\\').pop()
+        this.localOut = name.replace(/\.[^.]+$/,'') + '.' + this.localFmt
+      }
+    },
+    async selectDir() {
+      const r = await fetch('/api/select-dir'); const d = await r.json()
+      if (d.path) this.urlDir = d.path
+    },
 
-const evt = new EventSource("/progress");
-evt.onmessage = e => {
-  document.getElementById("loading").style.opacity = "0";
-  setTimeout(() => document.getElementById("loading").remove(), 300);
+    async doExtract() {
+      if (this.tab === 'local' && !this.filePath) { this.showToast('请先选择视频文件', true); return }
+      if (this.tab === 'url' && !this.urlText.trim()) { this.showToast('请先输入视频链接', true); return }
+      this.working = true
+      Alpine.store('progress').percent = 0
+      Alpine.store('progress').dotColor = 'var(--primary)'
+      Alpine.store('progress').status = '准备中...'
+      Alpine.store('progress').output = ''
 
-  const d = JSON.parse(e.data);
-  document.getElementById("fill").style.width = Math.min(d.percent||0, 100) + "%";
-  document.getElementById("status").textContent = d.status || "";
-  const ok = d.status && d.status.includes("\u2714");
-  const err = d.status && d.status.includes("\u5931\u8d25");
-  document.getElementById("dot").style.background = ok ? "var(--cyan)" : err ? "var(--pink)" : "var(--pink)";
-  if (ok || err) {
-    reset();
-    if (d.output) {
-      const dir = d.output.substring(0, d.output.lastIndexOf("\\"));
-      const s = dir.length > 42 ? dir.substring(0,20)+"..."+dir.slice(-19) : dir;
-      document.getElementById("result").innerHTML =
-        `<a onclick="fetch('/api/open-folder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:'${d.output}'})})">${s} &#8599;</a>`;
+      const endpoint = this.tab === 'local' ? '/api/extract-file' : '/api/extract-url'
+      const body = this.tab === 'local' ? {
+        input: this.filePath, output: this.localOut,
+        format: this.localFmt, quality: this.localQual
+      } : {
+        url: this.urlText, output_dir: this.urlDir,
+        format: this.urlFmt, quality: this.urlQual
+      }
+      fetch(endpoint, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)})
+    },
+
+    shortDir(p) {
+      const dir = p.substring(0, p.lastIndexOf('\\'))
+      return dir.length > 42 ? dir.substring(0,20)+'...'+dir.slice(-19) : dir
+    },
+    openFolder() {
+      fetch('/api/open-folder', {method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({path: Alpine.store('progress').output})})
+    },
+    showToast(msg, err) {
+      this.toast = msg; this.toastError = !!err
+      setTimeout(() => this.toast = '', err ? 3000 : 2000)
     }
   }
-};
+}
+</script>
+
+<script>
+document.addEventListener('alpine:init', () => {
+  Alpine.store('progress', { percent: 0, status: '待命', dotColor: 'var(--dim)', output: '', done: false })
+
+  const evt = new EventSource('/progress')
+  evt.onopen = () => {
+    const ld = document.getElementById('ld')
+    if (ld) { ld.style.opacity = '0'; setTimeout(() => ld.remove(), 300) }
+  }
+  evt.onmessage = e => {
+    const d = JSON.parse(e.data)
+    Alpine.store('progress').percent = Math.min(d.percent || 0, 100)
+    Alpine.store('progress').status = d.status || ''
+    const ok = d.status && d.status.includes('\u2714')
+    const err = d.status && d.status.includes('\u5931')
+    Alpine.store('progress').dotColor = ok ? 'var(--success)' : err ? 'var(--primary)' : 'var(--primary)'
+    if (d.output) Alpine.store('progress').output = d.output
+    if (ok || err) Alpine.store('progress').done = true
+  }
+})
 </script>
 </body>
 </html>
