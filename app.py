@@ -223,6 +223,24 @@ def progress():
     return Response(stream(), mimetype="text/event-stream")
 
 
+@app.route("/api/video")
+def api_video():
+    p = request.args.get("path", "")
+    if not p or not Path(p).is_file():
+        return "not found", 404
+    return Response(
+        _stream_file(p),
+        mimetype="video/mp4",
+        headers={"Accept-Ranges": "bytes", "Content-Length": str(Path(p).stat().st_size)}
+    )
+
+
+def _stream_file(path: str):
+    with open(path, "rb") as f:
+        while chunk := f.read(8192):
+            yield chunk
+
+
 @app.route("/api/select-file")
 def api_select_file():
     _dialogs.append("file")

@@ -150,15 +150,25 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%
             <template x-if="!filePath"><div>拖拽视频到此处，或点击浏览</div></template>
             <template x-if="filePath"><div x-text="filePath.split('\\\\').pop()" style="color:var(--white)"></div></template>
           </div>
-          <!-- Time range -->
+          <!-- Video preview + trim -->
           <div x-show="filePath" style="margin-top:14px">
-            <label class="label">音频裁剪 (可选)</label>
-            <div class="row">
-              <input type="text" x-model="tStart" placeholder="起始 如 0:00" style="flex:1" autocomplete="off">
-              <span style="color:var(--dim);font-size:13px">—</span>
-              <input type="text" x-model="tEnd" placeholder="结束 如 2:30" style="flex:1" autocomplete="off">
+            <div class="card" style="background:var(--input);padding:12px;border-radius:10px">
+              <div class="card-title" style="margin-bottom:8px;font-size:13px;display:flex;justify-content:space-between">
+                音频裁剪
+                <span style="font-weight:400;font-size:11px;color:var(--dim)">
+                  <span x-text="tStart||'0:00'"></span> — <span x-text="tEnd||'结尾'"></span>
+                </span>
+              </div>
+              <video :src="'/api/video?path='+encodeURIComponent(filePath)" style="width:100%;border-radius:8px;max-height:160px;background:#000" controls
+                     id="player" @loadedmetadata="onVideoLoad" @timeupdate="onTimeUpdate"
+                     preload="metadata"></video>
+              <div class="row" style="margin-top:10px;gap:6px">
+                <button class="btn btn-sm" @click="setStart" style="flex:1">设为起始</button>
+                <button class="btn btn-sm" @click="setEnd" style="flex:1">设为结束</button>
+                <button class="btn btn-sm" @click="resetTrim" style="min-width:auto">重置</button>
+                <button class="btn btn-sm" @click="previewTrim" style="min-width:auto;background:var(--accent);color:var(--white);border-color:var(--accent)">预览</button>
+              </div>
             </div>
-            <div class="hint">MM:SS 或 HH:MM:SS，留空表示从头/到尾</div>
           </div>
         </div>
       </template>
@@ -347,7 +357,21 @@ function app(){
     shortDir(p){const d=p.substring(0,p.lastIndexOf('\\'));return d.length>40?d.substring(0,18)+'...'+d.slice(-19):d},
     openFolder(){fetch('/api/open-folder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:Alpine.store('progress').output})})},
     openPath(p){fetch('/api/open-folder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p})})},
-    showToast(msg,err){this.toast=msg;this.toastError=!!err;this.toastAnim=true;setTimeout(()=>{this.toast='';this.toastAnim=false},err?3000:2000)}
+    showToast(msg,err){this.toast=msg;this.toastError=!!err;this.toastAnim=true;setTimeout(()=>{this.toast='';this.toastAnim=false},err?3000:2000)},
+    fmtTime(s){const m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec},
+    onVideoLoad(){this.vidDur=document.getElementById('player').duration||0},
+    onTimeUpdate(){},
+    setStart(){const v=document.getElementById('player');if(v)this.tStart=this.fmtTime(v.currentTime)},
+    setEnd(){const v=document.getElementById('player');if(v)this.tEnd=this.fmtTime(v.currentTime)},
+    resetTrim(){this.tStart='';this.tEnd='';const v=document.getElementById('player');if(v)v.currentTime=0},
+    previewTrim(){
+      const v=document.getElementById('player')
+      if(!v||!this.tStart)return
+      const parts=this.tStart.split(':'),ss=parts.length===2?+parts[0]*60+ +parts[1]:+parts[0]*3600+ +parts[1]*60+ +parts[2]
+      v.currentTime=ss;v.play()
+      if(this.tEnd){const ep=this.tEnd.split(':'),es=ep.length===2?+ep[0]*60+ +ep[1]:+ep[0]*3600+ +ep[1]*60+ +ep[2]
+        setTimeout(()=>v.pause(),(es-ss)*1000)}
+    },
   }
 }
 </script>
