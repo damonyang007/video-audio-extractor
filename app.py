@@ -7,7 +7,7 @@ from pathlib import Path
 from flask import Flask, request, jsonify, render_template, Response
 
 import audioextract as ae
-from audioextract import engine, douyin, history, dialogs
+from audioextract import engine, douyin, bilibili, youtube, history, dialogs
 
 app = Flask(__name__)
 
@@ -173,24 +173,37 @@ def api_extract_url():
         return jsonify({"ok": False, "error": "ffmpeg \u5931\u8d25"})
 
     def job():
-        if "douyin.com" in url or "iesdouyin.com" in url:
-            try:
-                vurl, title = douyin.resolve(url)
-                if vurl:
-                    codec = engine.CODEC_MAP.get(fmt, "libmp3lame")
-                    br = engine.BITRATE.get(qual, "192k")
-                    safe = re.sub(r'[\\/:*?"<>|]', '_', title or "audio")
-                    out = str(Path(out_dir) / f"{safe}.{fmt}")
-                    ae.store["status"] = f"\u4e0b\u8f7d: {(title or 'video')[:30]}..."
-                    c = [engine.tool("ffmpeg.exe"), "-nostdin", "-threads", "0", "-headers",
-                         f"User-Agent: {engine.MOBILE_UA}\r\nReferer: https://www.iesdouyin.com/",
-                         "-i", vurl, "-vn", "-acodec", codec, "-b:a", br, "-y", out]
-                    if engine.run_ffmpeg(c) == 0:
-                        ae.store.update({"output": out, "status": "\u2714 \u5df2\u5b8c\u6210", "pct": 100, "done": True})
-                        history.add(url, "url", out)
-                        return
-            except Exception:
-                pass
+        # Try platform-specific parsers before yt-dlp
+        parsers = [
+            ("douyin", douyin.resolve),
+            ("bilibili", bilibili.resolve),
+            ("youtube", youtube.resolve),
+        ]
+
+        for name, resolve_fn in parsers:
+            is_target = (
+                (name == "douyin" and ("douyin.com" in url or "iesdouyin.com" in url)) or
+                (name == "bilibili" and "bilibili.com" in url) or
+                (name == "youtube" and ("youtube.com" in url or "youtu.be" in url))
+            )
+            if is_target:
+                try:
+                    vurl, title = resolve_fn(url)
+                    if vurl:
+                        codec = engine.CODEC_MAP.get(fmt, "libmp3lame")
+                        br = engine.BITRATE.get(qual, "192k")
+                        safe = re.sub(r'[\\/:*?"<>|]', '_', title or "audio")
+                        out = str(Path(out_dir) / f"{safe}.{fmt}")
+                        ae.store["status"] = f"\u4e0b\u8f7d: {(title or 'video')[:30]}..."
+                        c = [engine.tool("ffmpeg.exe"), "-nostdin", "-threads", "0", "-headers",
+                             f"User-Agent: {engine.MOBILE_UA}\r\nReferer: https://www.iesdouyin.com/",
+                             "-i", vurl, "-vn", "-acodec", codec, "-b:a", br, "-y", out]
+                        if engine.run_ffmpeg(c) == 0:
+                            ae.store.update({"output": out, "status": "\u2714 \u5df2\u5b8c\u6210", "pct": 100, "done": True})
+                            history.add(url, "url", out)
+                            return
+                except Exception:
+                    pass
 
         ytdlp = engine.ensure_ytdlp()
         br = engine.BITRATE.get(qual, "192k").replace("k", "")
