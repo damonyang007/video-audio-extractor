@@ -1,0 +1,13 @@
+dist/
+build/
+*.spec
+*.zip
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+ffmpeg.exe
+ffprobe.exe
+ffplay.exe
+yt-dlp.exe
