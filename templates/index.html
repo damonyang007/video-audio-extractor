@@ -3,123 +3,9 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>AudioExtract</title>
-<style>
-:root {
-  --bg: #0a0a14; --card: rgba(22,22,40,.7); --card-hover: rgba(30,30,50,.8);
-  --border: rgba(255,255,255,.06); --border-focus: rgba(254,44,85,.4);
-  --input: rgba(10,10,25,.6); --primary: #fe2c55; --primary-h: #e0264c;
-  --primary-glow: rgba(254,44,85,.3); --accent: #7c3aed; --cyan: #20d5ec;
-  --white: #f8fafc; --sub: #94a3b8; --dim: #5a5b7a; --success: #22c55e;
-  --radius: 14px; --t: 180ms cubic-bezier(.4,0,.2,1);
-  --bg-glow: radial-gradient(ellipse 80% 60% at 50% -20%,rgba(124,58,237,.15),transparent),radial-gradient(ellipse 60% 50% at 80% 80%,rgba(254,44,85,.08),transparent);
-}
-.light {
-  --bg: #f1f5f9; --card: rgba(255,255,255,.85); --card-hover: rgba(255,255,255,.95);
-  --border: rgba(0,0,0,.08); --border-focus: rgba(254,44,85,.4);
-  --input: rgba(255,255,255,.9); --white: #0f172a; --sub: #475569; --dim: #94a3b8;
-  --bg-glow: none; --primary-glow: rgba(254,44,85,.15);
-}
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-body{
-  font-family:'Outfit',-apple-system,'Segoe UI',system-ui,sans-serif;
-  background:var(--bg);color:var(--white);min-height:100vh;
-  display:flex;justify-content:center;padding:28px 20px 48px;
-  background-image:var(--bg-glow);
-}
-.container{width:100%;max-width:560px;display:flex;flex-direction:column;gap:14px}
-.header{display:flex;align-items:center;gap:12px;padding:4px 0 10px}
-.header-right{margin-left:auto}
-.logo-svg{width:36px;height:36px;flex-shrink:0}
-.title{font-size:21px;font-weight:800;letter-spacing:-0.5px}
-.sub{font-size:12px;color:var(--sub);margin-top:1px}
-
-.theme-btn {
-  background:var(--card);border:1px solid var(--border);border-radius:10px;
-  color:var(--sub);cursor:pointer;font-size:18px;padding:8px 10px;
-  transition:all var(--t);line-height:1;
-}
-.theme-btn:hover{color:var(--white);border-color:var(--dim)}
-
-.tab-bar{display:flex;background:var(--card);border-radius:10px;padding:4px;gap:4px;backdrop-filter:blur(20px);border:1px solid var(--border)}
-.tab-btn{flex:1;text-align:center;padding:11px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--sub);transition:all var(--t);border:none;background:none;font-family:inherit;outline:none}
-.tab-btn:focus-visible{box-shadow:0 0 0 2px var(--primary)}
-.tab-btn.active{background:var(--primary);color:var(--white);box-shadow:0 2px 8px var(--primary-glow)}
-
-.card{background:var(--card);border-radius:var(--radius);padding:20px;border:1px solid var(--border);backdrop-filter:blur(20px);transition:all var(--t)}
-.card:hover{border-color:var(--dim);transform:translateY(-1px);box-shadow:0 4px 24px rgba(0,0,0,.3)}
-.card-title{font-size:15px;font-weight:700;margin-bottom:12px;letter-spacing:-0.3px;display:flex;align-items:center;gap:8px}
-.card-title .badge{font-size:11px;background:var(--primary);color:#fff;padding:2px 8px;border-radius:6px;font-weight:600}
-
-.drop-zone{border:2px dashed var(--border);border-radius:10px;padding:28px 20px;text-align:center;cursor:pointer;color:var(--sub);font-size:13px;transition:all var(--t)}
-.drop-zone:hover,.drop-zone.drag-over{border-color:var(--primary);background:rgba(254,44,85,.05);color:var(--white)}
-.drop-zone.has-file{border-style:solid;border-color:var(--dim);background:var(--input);text-align:left;padding:14px 18px}
-
-label.label{display:block;font-size:11px;color:var(--sub);margin-bottom:5px;font-weight:500;text-transform:uppercase;letter-spacing:.5px}
-input[type="text"],.file-box,select{width:100%;background:var(--input);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--white);font-size:13px;outline:none;font-family:inherit;transition:all var(--t)}
-input[type="text"]:focus,select:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow)}
-input::placeholder{color:var(--dim)}
-.file-box{cursor:pointer;user-select:none;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-.file-box.filled{color:var(--white)}
-.row{display:flex;gap:10px;align-items:center}.row.grow>:first-child{flex:1}
-select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8'%3E%3Cpath d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
-.btn{background:var(--card);color:var(--sub);border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:all var(--t);font-family:inherit;outline:none;white-space:nowrap;position:relative;overflow:hidden}
-.btn:hover{background:var(--card-hover);color:var(--white);border-color:var(--dim)}
-.btn:focus-visible{box-shadow:0 0 0 2px var(--primary)}
-.btn:active{transform:scale(.97)}
-.btn::after{content:'';position:absolute;inset:0;background:rgba(255,255,255,.05);opacity:0;transition:opacity var(--t)}
-.btn:active::after{opacity:1}
-.btn-primary{width:100%;padding:15px;font-size:15px;font-weight:700;margin-top:4px;background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;border:none;border-radius:var(--radius);cursor:pointer;transition:all var(--t);font-family:inherit;outline:none;letter-spacing:-0.3px;position:relative;overflow:hidden}
-.btn-primary::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent);transition:left .6s}
-.btn-primary:hover::before{left:100%}
-.btn-primary:focus-visible{box-shadow:0 0 0 3px var(--primary-glow)}
-.btn-primary:active{transform:scale(.98)}
-.btn-primary:disabled{opacity:.5;cursor:default;transform:none}
-.btn-primary:disabled::before{display:none}
-.btn-cancel{background:transparent;border:1px solid var(--border);color:var(--sub);border-radius:10px;padding:10px 20px;font-size:13px;cursor:pointer;transition:all var(--t);font-family:inherit}
-.btn-cancel:hover{border-color:var(--primary);color:var(--primary)}
-.btn-sm{font-size:11px;padding:6px 10px;border-radius:6px}
-.btn-danger{color:var(--primary);border-color:rgba(254,44,85,.2)}
-.btn-danger:hover{background:rgba(254,44,85,.1);border-color:var(--primary)}
-
-.progress-wrap{margin-top:2px}
-.progress-bar{width:100%;height:4px;background:var(--border);border-radius:4px;overflow:hidden}
-.progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent),var(--cyan));border-radius:4px;transition:width .35s cubic-bezier(.4,0,.2,1);background-size:200% 100%;animation:shimmer-bar 2s linear infinite}
-@keyframes shimmer-bar{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.status-row{display:flex;align-items:center;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--sub)}
-.status-left{display:flex;align-items:center;gap:8px;flex:1;overflow:hidden}
-.status-left span:first-of-type{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;transition:background var(--t)}
-.result-link{display:block;text-align:center;color:var(--cyan);text-decoration:none;font-size:12px;font-weight:500;cursor:pointer;margin-top:12px;transition:opacity var(--t)}
-.result-link:hover{opacity:.8;text-decoration:underline}
-.result-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px}
-.result-row .btn{font-size:11px;padding:6px 12px}
-.hint{font-size:10px;color:var(--dim);margin-top:4px}
-.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.field{display:flex;flex-direction:column;gap:4px}
-
-.history-card{max-height:200px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
-.history-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;transition:all var(--t);cursor:pointer;font-size:12px}
-.history-item:hover{background:var(--input)}
-.history-item .src{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:var(--white)}
-.history-item .time{color:var(--dim);font-size:11px;flex-shrink:0}
-.history-item .kind{font-size:10px;background:var(--accent);color:#fff;padding:1px 6px;border-radius:4px;flex-shrink:0}
-.batch-list{max-height:180px;overflow-y:auto;margin-top:8px}
-.batch-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;font-size:12px;color:var(--sub);transition:all var(--t)}
-.batch-item:hover{background:var(--input)}
-.batch-item .name{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-.batch-item .del{color:var(--primary);cursor:pointer;font-size:14px;padding:0 4px}.batch-item .del:hover{opacity:.8}
-[x-cloak]{display:none!important}
-.loading-screen{position:fixed;inset:0;background:var(--bg);z-index:100;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;transition:opacity .3s}
-.spinner{width:34px;height:34px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);z-index:200;background:var(--card);border:1px solid var(--border);backdrop-filter:blur(20px);border-radius:12px;padding:12px 24px;font-size:13px;box-shadow:0 8px 32px rgba(0,0,0,.6)}
-.toast-error{border-color:var(--primary)}
-audio{width:100%;height:32px;margin-top:8px;border-radius:8px}
-@media(max-width:480px){body{padding:16px 12px 36px}.settings-grid{grid-template-columns:1fr}.card{padding:16px}}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
-</style>
+<link rel="stylesheet" href="/static/style.css">
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<script defer src="/static/app.js"></script>
 </head>
 <body>
 
@@ -138,7 +24,7 @@ audio{width:100%;height:32px;margin-top:8px;border-radius:8px}
       <rect x="29" y="12" width="5" height="18" rx="2.5" fill="url(#lg)" opacity=".55"/>
     </svg>
     <div><div class="title">AudioExtract</div><div class="sub">提取视频音频 · 一键搞定</div></div>
-    <button class="theme-btn header-right" @click="toggleTheme" x-text="theme==='dark'?'\u263C':'\u263D'"
+    <button class="theme-btn header-right" @click="toggleTheme" x-text="theme==='dark'?'&#x263C;':'&#x263D;'"
             :title="theme==='dark'?'切换亮色':'切换暗色'"></button>
   </header>
 
@@ -176,8 +62,8 @@ audio{width:100%;height:32px;margin-top:8px;border-radius:8px}
               <div class="row" style="margin-top:10px;gap:6px">
                 <button class="btn btn-sm" @click="setStart" style="flex:1">设为起始</button>
                 <button class="btn btn-sm" @click="setEnd" style="flex:1">设为结束</button>
-                <button class="btn btn-sm" @click="resetTrim" style="min-width:auto">重置</button>
-                <button class="btn btn-sm" @click="previewTrim" style="min-width:auto;background:var(--accent);color:#fff;border-color:var(--accent)">预览</button>
+                <button class="btn btn-sm" @click="resetTrim">重置</button>
+                <button class="btn btn-sm" @click="previewTrim" style="background:var(--accent);color:#fff;border-color:var(--accent)">预览</button>
               </div>
             </div>
           </div>
@@ -191,10 +77,7 @@ audio{width:100%;height:32px;margin-top:8px;border-radius:8px}
           </div>
           <div class="batch-list" x-show="batchFiles.length>0">
             <template x-for="(f,i) in batchFiles" :key="i">
-              <div class="batch-item">
-                <span class="name" x-text="f.split('\\\\').pop()"></span>
-                <span class="del" @click="batchFiles.splice(i,1)">&times;</span>
-              </div>
+              <div class="batch-item"><span class="name" x-text="f.split('\\\\').pop()"></span><span class="del" @click="batchFiles.splice(i,1)">&times;</span></div>
             </template>
           </div>
           <div x-show="batchFiles.length>0" style="margin-top:8px">
@@ -256,14 +139,12 @@ audio{width:100%;height:32px;margin-top:8px;border-radius:8px}
       <div class="status-left">
         <div class="status-dot" :style="'background:'+$store.progress.dotColor"></div>
         <span x-text="$store.progress.status"></span>
-        <span x-show="$store.progress.file_n>0" style="color:var(--dim);font-size:11px"
-              x-text="'('+$store.progress.file_i+'/'+$store.progress.file_n+')'"></span>
+        <span x-show="$store.progress.file_n>0" style="color:var(--dim);font-size:11px" x-text="'('+$store.progress.file_i+'/'+$store.progress.file_n+')'"></span>
       </div>
       <span x-show="$store.progress.eta" style="color:var(--dim);font-size:11px" x-text="$store.progress.eta"></span>
     </div>
   </div>
 
-  <!-- Result -->
   <div class="result-row" x-show="$store.progress.output && !working">
     <a class="result-link" href="#" @click.prevent="openFolder" style="margin-top:0">打开文件夹 →</a>
     <button class="btn btn-sm" @click="playAudio" style="color:var(--cyan);border-color:var(--cyan)">播放音频</button>
@@ -273,122 +154,16 @@ audio{width:100%;height:32px;margin-top:8px;border-radius:8px}
 
   <!-- History -->
   <div class="card" x-show="history.length>0">
-    <div class="card-title" style="margin-bottom:6px">
-      最近提取
-      <button class="btn btn-sm btn-danger" style="margin-left:auto" @click="clearHistory">清除</button>
-    </div>
+    <div class="card-title" style="margin-bottom:6px">最近提取 <button class="btn btn-sm btn-danger" style="margin-left:auto" @click="clearHistory">清除</button></div>
     <div class="history-card">
       <template x-for="(h,i) in history" :key="i">
         <div class="history-item" @click="openPath(h.output)">
           <span class="kind" x-text="h.kind==='url'?'URL':'FILE'" :style="h.kind==='url'?'background:var(--cyan)':''"></span>
-          <span class="src" x-text="h.source"></span>
-          <span class="time" x-text="h.time"></span>
+          <span class="src" x-text="h.source"></span><span class="time" x-text="h.time"></span>
         </div>
       </template>
     </div>
   </div>
-
-  <div class="toast" :class="{'toast-error':toastError,'toast-enter':toastAnim}"
-       x-show="toast" x-text="toast" @click="toast=''" style="display:none"></div>
 </div>
-
-<script>
-document.addEventListener('alpine:init',()=>{
-  Alpine.store('progress',{pct:0,status:'待命',dotColor:'var(--dim)',output:'',done:false,file_i:0,file_n:0,eta:'',startTime:0})
-  const evt=new EventSource('/progress')
-  evt.onopen=()=>{const ld=document.getElementById('ld');if(ld){ld.style.opacity='0';setTimeout(()=>ld.remove(),300)}}
-  evt.onmessage=e=>{
-    const d=JSON.parse(e.data),s=Alpine.store('progress')
-    s.pct=Math.min(d.pct||0,100);s.status=d.status||''
-    if(d.file_i!=null)s.file_i=d.file_i;if(d.file_n!=null)s.file_n=d.file_n
-    if(d.output)s.output=d.output
-    if(d.pct>1 && s.startTime){
-      const elapsed=(Date.now()-s.startTime)/1000
-      const total=elapsed/(d.pct/100),remaining=Math.max(0,total-elapsed)
-      s.eta=remaining>60?Math.round(remaining/60)+'分 剩余':Math.round(remaining)+'秒 剩余'
-    }
-    const ok=d.status&&d.status.includes('\u2714'),err=d.status&&(d.status.includes('\u5931')||d.status.includes('\u53d6\u6d88'))
-    s.dotColor=ok?'var(--success)':err?'var(--primary)':'var(--primary)'
-    if(d.done){s.done=true;s.eta='';notify(d.status,d.output)}
-  }
-})
-function notify(s,o){
-  if(!('Notification' in window)||Notification.permission==='denied')return
-  if(Notification.permission==='default'){Notification.requestPermission();return}
-  if(s&&s.includes('\u2714')&&o)new Notification('AudioExtract',{body:'完成: '+o.split('\\').pop()})
-}
-
-function app(){
-  return{
-    tab:'local',batchMode:false,batchFiles:[],dragOver:false,
-    filePath:'',tStart:'',tEnd:'',showPlayer:false,
-    localFmt:'mp3',localQual:'medium',localOut:'',
-    urlFmt:'mp3',urlQual:'medium',urlDir:'',urlText:'',
-    working:false,history:[],toast:'',toastError:false,toastAnim:false,
-    theme:'dark',
-
-    async init(){
-      this.$watch('$store.progress.done',v=>{if(v){this.working=false;Alpine.store('progress').done=false;this.loadHistory()}})
-      this.loadHistory()
-      if('Notification' in window && Notification.permission==='default') Notification.requestPermission()
-      this.theme=localStorage.getItem('ae-theme')||'dark'
-      if(this.theme==='light')document.body.classList.add('light')
-      try{const r=await fetch('/api/config');const c=await r.json();
-        if(c.fmt)this.localFmt=this.urlFmt=c.fmt
-        if(c.qual)this.localQual=this.urlQual=c.qual
-        if(c.dir)this.urlDir=c.dir
-      }catch(e){}
-    },
-    async loadHistory(){try{const r=await fetch('/api/history');this.history=await r.json()}catch(e){}},
-    async clearHistory(){await fetch('/api/history/clear',{method:'POST'});this.history=[]},
-
-    toggleTheme(){this.theme=this.theme==='dark'?'light':'dark';document.body.classList.toggle('light',this.theme==='light');localStorage.setItem('ae-theme',this.theme)},
-    async savePrefs(){
-      await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({fmt:this.localFmt,qual:this.localQual,dir:this.urlDir})})
-    },
-
-    async selectFile(){const r=await fetch('/api/select-file');const d=await r.json();if(d.path)this.setFile(d.path)},
-    setFile(p){this.filePath=p;this.localOut=p.split('\\').pop().replace(/\.[^.]+$/,'')+'.'+this.localFmt},
-    handleDrop(e){this.dragOver=false;const f=e.dataTransfer.files;if(f.length&&f[0].path)this.setFile(f[0].path);else this.showToast('请从文件管理器拖拽',true)},
-
-    async addBatchFile(){const r=await fetch('/api/select-file');const d=await r.json();if(d.path&&!this.batchFiles.includes(d.path))this.batchFiles.push(d.path);this.localOut=''},
-    handleBatchDrop(e){this.dragOver=false;for(const f of Array.from(e.dataTransfer.files)){if(f.path&&!this.batchFiles.includes(f.path))this.batchFiles.push(f.path)}},
-    async selectDir(){const r=await fetch('/api/select-dir');const d=await r.json();if(d.path){this.urlDir=d.path;this.savePrefs()}},
-    async selectOutput(){const r=await fetch('/api/select-save');const d=await r.json();if(d.path)this.localOut=d.path},
-    onPaste(e){const t=(e.clipboardData||window.clipboardData).getData('text');if(t&&t.includes('http')&&!this.urlText)setTimeout(()=>{if(this.urlText.includes('http'))this.showToast('检测到链接，Ctrl+Enter 开始')},100)},
-
-    async doExtract(){
-      if(this.tab==='local'){
-        if(this.batchMode){if(!this.batchFiles.length){this.showToast('请添加文件',true);return}}
-        else{if(!this.filePath){this.showToast('请先选择视频文件',true);return}}
-        this.working=true;this.resetProgress();this.showPlayer=false
-        const body=this.batchMode
-          ?{files:this.batchFiles,format:this.localFmt,quality:this.localQual}
-          :{input:this.filePath,output:this.localOut,format:this.localFmt,quality:this.localQual,start:this.tStart,end:this.tEnd}
-        fetch('/api/extract-file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
-      }else{
-        if(!this.urlText.trim()){this.showToast('请先输入视频链接',true);return}
-        this.working=true;this.resetProgress();this.savePrefs()
-        fetch('/api/extract-url',{method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({url:this.urlText,output_dir:this.urlDir,format:this.urlFmt,quality:this.urlQual})})
-      }
-    },
-    resetProgress(){const s=Alpine.store('progress');s.pct=0;s.dotColor='var(--primary)';s.status='准备中...';s.output='';s.file_i=0;s.file_n=0;s.eta='';s.startTime=Date.now()},
-    async cancel(){await fetch('/api/cancel',{method:'POST'});this.working=false;this.showToast('已取消')},
-    openFolder(){fetch('/api/open-folder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:Alpine.store('progress').output})})},
-    openPath(p){fetch('/api/open-folder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p})})},
-    playAudio(){this.showPlayer=!this.showPlayer},
-    showToast(msg,err){this.toast=msg;this.toastError=!!err;this.toastAnim=true;setTimeout(()=>{this.toast='';this.toastAnim=false},err?3000:2000)},
-    fmtTime(s){const m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec},
-    onVideoLoad(){},
-    setStart(){const v=document.getElementById('player');if(v)this.tStart=this.fmtTime(v.currentTime)},
-    setEnd(){const v=document.getElementById('player');if(v)this.tEnd=this.fmtTime(v.currentTime)},
-    resetTrim(){this.tStart='';this.tEnd='';const v=document.getElementById('player');if(v)v.currentTime=0},
-    previewTrim(){const v=document.getElementById('player');if(!v||!this.tStart)return;const ss=this._parseTime(this.tStart);v.currentTime=ss;v.play();if(this.tEnd){setTimeout(()=>v.pause(),(this._parseTime(this.tEnd)-ss)*1000)}},
-    _parseTime(t){const p=t.split(':');return p.length===2?+p[0]*60+ +p[1]:+p[0]*3600+ +p[1]*60+ +p[2]},
-  }
-}
-</script>
 </body>
 </html>
