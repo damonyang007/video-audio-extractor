@@ -243,6 +243,23 @@ def _stream_file(path: str):
             yield chunk
 
 
+@app.route("/api/config", methods=["GET", "POST"])
+def api_config():
+    p = _hist_path().parent / "config.json"
+    if request.method == "GET":
+        try:
+            return jsonify(json.loads(p.read_text(encoding="utf-8")) if p.is_file() else {})
+        except Exception:
+            return jsonify({})
+    data = request.json or {}
+    try:
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+    except Exception:
+        pass
+    return jsonify({"ok": True})
+
+
 @app.route("/api/select-file")
 def api_select_file():
     _dialogs.put("file")
