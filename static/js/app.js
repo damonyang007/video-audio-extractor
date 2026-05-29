@@ -67,8 +67,11 @@ function app() {
       if (d.path) { this.urlDir = d.path; this.savePrefs() }
     },
     async selectOutput() {
-      const r = await fetch('/api/select-save'); const d = await r.json()
-      if (d.path) this.localOut = d.path
+      const r = await fetch('/api/select-dir'); const d = await r.json()
+      if (d.path) {
+        const name = (this.batchFiles[0] || '').split('\\').pop().replace(/\.[^.]+$/, '') || 'audio'
+        this.localOut = d.path + '\\' + name + '.' + this.localFmt
+      }
     },
     onPaste(e) {
       const t = (e.clipboardData || window.clipboardData).getData('text')
@@ -88,7 +91,13 @@ function app() {
       const f = e.dataTransfer.files
       if (f.length && f[0].path) { this.convPath = f[0].path; this.convOut = f[0].path.replace(/\.[^.]+$/, '') + '.' + this.convFmt }
     },
-    async selectConvOutput() { const r = await fetch('/api/select-save'); const d = await r.json(); if (d.path) this.convOut = d.path },
+    async selectConvOutput() {
+      const r = await fetch('/api/select-dir'); const d = await r.json()
+      if (d.path) {
+        const name = (this.convPath || '').split('\\').pop().replace(/\.[^.]+$/, '') || 'audio'
+        this.convOut = d.path + '\\' + name + '.' + this.convFmt
+      }
+    },
 
     // ---- Extraction ----
     async doExtract() {
