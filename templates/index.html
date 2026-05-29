@@ -36,7 +36,7 @@
   {% include 'partials/tab-convert.html' %}
 
   <button class="btn-primary" :disabled="working" @click="doExtract">
-    <span x-text="working ? '··· 提取中' : tab==='convert' ? '开始转换' : batchMode && batchFiles.length ? '提取 '+batchFiles.length+' 个文件' : '提取音频'"></span>
+    <span x-text="working ? '··· 提取中' : tab==='convert' ? '开始转换' : batchFiles.length>1 ? '提取 '+batchFiles.length+' 个文件' : '提取音频'"></span>
   </button>
   <button class="btn-cancel" x-show="working" @click="cancel">取消提取</button>
 

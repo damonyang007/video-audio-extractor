@@ -1,68 +1,47 @@
 <section x-show="tab==='local'">
   <div class="card">
-    <div class="card-title">
-      视频文件
-      <button class="btn btn-sm" @click="batchMode=!batchMode"
-              x-text="batchMode?'单文件':'批量'"
-              :style="batchMode?'background:var(--primary);color:#fff;border-color:var(--primary)':''"></button>
-    </div>
+    <div class="card-title">视频文件</div>
+    <div>
+      <div class="drop-zone" style="padding:16px"
+           @click="addBatchFile" @dragover.prevent="dragOver=true"
+           @dragleave="dragOver=false" @drop.prevent="handleBatchDrop">
+        <div>点击或拖拽文件添加到列表（支持多选）</div>
+      </div>
+      <div class="batch-list" x-show="batchFiles.length>0">
+        <template x-for="(f,i) in batchFiles" :key="i">
+          <div class="batch-item">
+            <span class="name" x-text="f.split('\\\\').pop()"></span>
+            <span class="del" @click="batchFiles.splice(i,1)">&times;</span>
+          </div>
+        </template>
+      </div>
+      <div x-show="batchFiles.length>0" style="margin-top:8px">
+        <span style="font-size:12px;color:var(--sub)"
+              x-text="batchFiles.length===1?'1 个文件':batchFiles.length+' 个文件'"></span>
+        <button class="btn btn-sm btn-danger" style="float:right" @click="batchFiles=[];filePath='';localOut='';tStart='';tEnd=''">清空</button>
+      </div>
 
-    <template x-if="!batchMode">
-      <div>
-        <div class="drop-zone" :class="{'has-file':!!filePath,'drag-over':dragOver}"
-             @click="selectFile" @dragover.prevent="dragOver=true" @dragleave="dragOver=false"
-             @drop.prevent="handleDrop($event)" tabindex="0" @keydown.enter="selectFile">
-          <template x-if="!filePath"><div>拖拽视频到此处，或点击浏览</div></template>
-          <template x-if="filePath">
-            <div style="display:flex;align-items:center;justify-content:space-between">
-              <span x-text="filePath.split('\\\\').pop()" style="color:var(--white);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1"></span>
-              <span @click.stop="clearFile" style="color:var(--primary);cursor:pointer;font-size:18px;padding:0 4px;flex-shrink:0">&times;</span>
-            </div>
-          </template>
-        </div>
-        <div x-show="filePath" style="margin-top:14px">
-          <div class="card" style="background:var(--input);padding:12px;border-radius:10px">
-            <div class="card-title" style="margin-bottom:8px;font-size:13px;display:flex;justify-content:space-between">
-              音频裁剪
-              <span style="font-weight:400;font-size:11px;color:var(--dim)">
-                <span x-text="tStart||'0:00'"></span> — <span x-text="tEnd||'结尾'"></span>
-              </span>
-            </div>
-            <video :src="'/api/video?path='+encodeURIComponent(filePath)" style="width:100%;border-radius:8px;max-height:160px;background:#000"
-                   controls id="player" preload="metadata"></video>
-            <div class="row" style="margin-top:10px;gap:6px">
-              <button class="btn btn-sm" @click="setStart" style="flex:1">设为起始</button>
-              <button class="btn btn-sm" @click="setEnd" style="flex:1">设为结束</button>
-              <button class="btn btn-sm" @click="resetTrim">重置</button>
-              <button class="btn btn-sm" @click="previewTrim"
-                      style="background:var(--accent);color:#fff;border-color:var(--accent)">预览</button>
-            </div>
+      <!-- Trim player: only show when exactly 1 file -->
+      <div x-show="batchFiles.length===1" style="margin-top:14px">
+        <div class="card" style="background:var(--input);padding:12px;border-radius:10px">
+          <div class="card-title" style="margin-bottom:8px;font-size:13px;display:flex;justify-content:space-between">
+            音频裁剪
+            <span style="font-weight:400;font-size:11px;color:var(--dim)">
+              <span x-text="tStart||'0:00'"></span> — <span x-text="tEnd||'结尾'"></span>
+            </span>
+          </div>
+          <video :src="'/api/video?path='+encodeURIComponent(batchFiles[0])" style="width:100%;border-radius:8px;max-height:160px;background:#000"
+                 controls id="player" preload="metadata"></video>
+          <div class="row" style="margin-top:10px;gap:6px">
+            <button class="btn btn-sm" @click="setStart" style="flex:1">设为起始</button>
+            <button class="btn btn-sm" @click="setEnd" style="flex:1">设为结束</button>
+            <button class="btn btn-sm" @click="resetTrim">重置</button>
+            <button class="btn btn-sm" @click="previewTrim"
+                    style="background:var(--accent);color:#fff;border-color:var(--accent)">预览</button>
           </div>
         </div>
       </div>
-    </template>
-
-    <template x-if="batchMode">
-      <div>
-        <div class="drop-zone" style="padding:16px"
-             @click="addBatchFile" @dragover.prevent="dragOver=true"
-             @dragleave="dragOver=false" @drop.prevent="handleBatchDrop">
-          <div>点击或拖拽文件添加到列表</div>
-        </div>
-        <div class="batch-list" x-show="batchFiles.length>0">
-          <template x-for="(f,i) in batchFiles" :key="i">
-            <div class="batch-item">
-              <span class="name" x-text="f.split('\\\\').pop()"></span>
-              <span class="del" @click="batchFiles.splice(i,1)">&times;</span>
-            </div>
-          </template>
-        </div>
-        <div x-show="batchFiles.length>0" style="margin-top:8px">
-          <span style="font-size:12px;color:var(--sub)" x-text="batchFiles.length+' 个文件'"></span>
-          <button class="btn btn-sm btn-danger" style="float:right" @click="batchFiles=[]">清空</button>
-        </div>
-      </div>
-    </template>
+    </div>
   </div>
 
   <div class="card">
