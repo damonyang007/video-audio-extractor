@@ -122,9 +122,42 @@ input::placeholder { color: var(--dim); }
 }
 .result a:hover { text-decoration: underline; }
 .hint { font-size: 11px; color: var(--dim); margin-top: 4px; }
+
+.skeleton {
+  background: linear-gradient(90deg, var(--card) 25%, var(--border) 50%, var(--card) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.loading-overlay {
+  position: fixed; inset: 0; background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 16px; z-index: 100;
+  transition: opacity .3s;
+}
+.loading-dot {
+  width: 40px; height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--pink);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 13px; color: var(--sub); }
 </style>
 </head>
 <body>
+
+<div class="loading-overlay" id="loading">
+  <div class="loading-dot"></div>
+  <div class="loading-text">Loading...</div>
+</div>
 <div class="container">
   <div class="header">
     <div class="logo">
@@ -284,6 +317,9 @@ function reset() {
 
 const evt = new EventSource("/progress");
 evt.onmessage = e => {
+  document.getElementById("loading").style.opacity = "0";
+  setTimeout(() => document.getElementById("loading").remove(), 300);
+
   const d = JSON.parse(e.data);
   document.getElementById("fill").style.width = Math.min(d.percent||0, 100) + "%";
   document.getElementById("status").textContent = d.status || "";

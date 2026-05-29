@@ -27,6 +27,7 @@ FFMPEG_URL = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
 YTDLP_URL = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe"
 
 progress_store = {"percent": 0, "status": "\u5f85\u547d", "output": ""}
+_tool_cache = {}
 
 
 def exe_dir():
@@ -35,8 +36,13 @@ def exe_dir():
 
 
 def get_tool(name):
+    if name in _tool_cache:
+        return _tool_cache[name]
     local = os.path.join(exe_dir(), name)
-    return local if os.path.isfile(local) else shutil.which(name.replace(".exe", ""))
+    path = local if os.path.isfile(local) else shutil.which(name.replace(".exe", ""))
+    if path:
+        _tool_cache[name] = path
+    return path
 
 
 def ensure_ffmpeg():
