@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog
 import threading
+import json
 
 _action = None
 _result = ""
@@ -16,24 +17,24 @@ def start():
         if _action:
             act = _action
             _action = None
-            if act == "file":
-                p = filedialog.askopenfilename(
-                    parent=root, title="\u9009\u62e9\u89c6\u9891\u6587\u4ef6",
-                    filetypes=[("\u89c6\u9891", "*.mp4 *.mkv *.avi *.mov *.wmv *.flv *.webm *.m4v *.mpg *.mpeg *.ts *.rmvb *.3gp"),
-                               ("\u6240\u6709", "*.*")]
+            if act == "files":
+                paths = filedialog.askopenfilenames(
+                    parent=root, title="选择文件",
+                    filetypes=[("媒体", "*.mp4 *.mkv *.avi *.mov *.wmv *.flv *.webm *.m4v *.mpg *.mpeg *.ts *.rmvb *.3gp *.mp3 *.wav *.aac *.m4a *.ogg *.flac"),
+                               ("所有", "*.*")]
+                )
+                _result = json.dumps(list(paths)) if paths else "[]"
+            elif act == "save":
+                p = filedialog.asksaveasfilename(
+                    parent=root, title="保存文件",
+                    filetypes=[("音频 (mp3)", "*.mp3"), ("音频 (wav)", "*.wav"),
+                               ("音频 (aac)", "*.aac"), ("音频 (m4a)", "*.m4a"),
+                               ("所有", "*.*")],
+                    defaultextension=".mp3"
                 )
                 _result = p or ""
             elif act == "dir":
-                p = filedialog.askdirectory(parent=root, title="\u9009\u62e9\u4fdd\u5b58\u76ee\u5f55")
-                _result = p or ""
-            elif act == "save":
-                p = filedialog.asksaveasfilename(
-                    parent=root, title="\u4fdd\u5b58\u97f3\u9891\u6587\u4ef6",
-                    filetypes=[("\u97f3\u9891 (mp3)", "*.mp3"), ("\u97f3\u9891 (wav)", "*.wav"),
-                               ("\u97f3\u9891 (aac)", "*.aac"), ("\u97f3\u9891 (m4a)", "*.m4a"),
-                               ("\u6240\u6709", "*.*")],
-                    defaultextension=".mp3"
-                )
+                p = filedialog.askdirectory(parent=root, title="选择保存目录")
                 _result = p or ""
             _event.set()
         root.after(100, check)

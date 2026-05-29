@@ -51,9 +51,9 @@ def api_config():
     return jsonify({"ok": True})
 
 
-@app.route("/api/select-file")
-def api_select_file():
-    return jsonify({"path": dialogs.request_dialog("file")})
+@app.route("/api/select-files")
+def api_select_files():
+    return jsonify({"paths": json.loads(dialogs.request_dialog("files"))})
 
 
 @app.route("/api/select-save")

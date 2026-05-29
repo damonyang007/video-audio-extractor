@@ -41,10 +41,14 @@ function app() {
 
     // ---- File management (always batch-capable) ----
     async addBatchFile() {
-      const r = await fetch('/api/select-file'); const d = await r.json()
-      if (d.path && !this.batchFiles.includes(d.path)) {
-        this.batchFiles.push(d.path)
-        this.localOut = d.path.split('\\').pop().replace(/\.[^.]+$/, '') + '.' + this.localFmt
+      const r = await fetch('/api/select-files'); const d = await r.json()
+      for (const p of (d.paths || [])) {
+        if (!this.batchFiles.includes(p)) this.batchFiles.push(p)
+      }
+      if (this.batchFiles.length === 1) {
+        this.localOut = this.batchFiles[0].split('\\').pop().replace(/\.[^.]+$/, '') + '.' + this.localFmt
+      } else {
+        this.localOut = ''
       }
     },
     handleBatchDrop(e) {
