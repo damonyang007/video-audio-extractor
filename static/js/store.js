@@ -14,6 +14,9 @@ document.addEventListener('alpine:init', () => {
   evt.onmessage = (e) => {
     const d = JSON.parse(e.data), s = Alpine.store('progress')
     s.pct = Math.min(d.pct || 0, 100)
+    if (d.file_n > 1 && d.file_i > 0) {
+      s.pct = ((d.file_i - 1) / d.file_n * 100) + (d.pct / d.file_n)
+    }
     s.status = d.status || ''
     if (d.file_i != null) s.file_i = d.file_i
     if (d.file_n != null) s.file_n = d.file_n

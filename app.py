@@ -183,11 +183,13 @@ def api_extract_url():
                         safe = re.sub(r'[\\/:*?"<>|]', '_', title or "audio")
                         out = str(Path(out_dir) / f"{safe}.{fmt}")
                         ae.store["status"] = f"\u4e0b\u8f7d: {(title or 'video')[:30]}..."
-                        c = [engine.tool("ffmpeg.exe"), "-nostdin", "-threads", "0", "-headers",
-                             f"User-Agent: {engine.MOBILE_UA}\r\nReferer: https://www.iesdouyin.com/",
+                        referer = {"douyin": "https://www.iesdouyin.com/",
+                                    "bilibili": "https://www.bilibili.com/",
+                                    "youtube": "https://www.youtube.com/"}.get(name, "")
+                        c = [engine.tool("ffmpeg.exe"), "-nostdin", "-threads", "0",
+                             "-headers", f"User-Agent: {engine.MOBILE_UA}\r\nReferer: {referer}",
                              "-i", vurl, "-vn", "-acodec", codec, "-b:a", br, "-y", out]
-                        rc = engine.run_ffmpeg(c)
-                        if rc == 0:
+                        if engine.run_ffmpeg(c) == 0:
                             ae.store.update({"output": out, "status": "\u2714 \u5df2\u5b8c\u6210", "pct": 100, "done": True})
                             history.add(url, "url", out)
                             return
@@ -265,10 +267,10 @@ def api_open_folder():
 
 
 def main():
-    import webbrowser
-    port = 17777
+    import webbrowser, time
+    port = int(os.environ.get("AE_PORT", "17777"))
     threading.Thread(target=lambda: app.run(host="127.0.0.1", port=port, debug=False), daemon=True).start()
-    import time; time.sleep(1)
+    time.sleep(1)
     webbrowser.open(f"http://127.0.0.1:{port}")
     while True:
         time.sleep(1)

@@ -33,7 +33,7 @@ function app() {
     },
 
     async loadHistory() { try { const r = await fetch('/api/history'); this.history = await r.json() } catch (e) { } },
-    async clearHistory() { await fetch('/api/history/clear', { method: 'POST' }); this.history = [] },
+    async clearHistory() { if (confirm('确定清除所有记录？')) { await fetch('/api/history/clear', { method: 'POST' }); this.history = [] } },
     toggleTheme() { this.theme = this.theme === 'dark' ? 'light' : 'dark'; document.body.classList.toggle('light', this.theme === 'light'); localStorage.setItem('ae-theme', this.theme) },
     async savePrefs() { await fetch('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fmt: this.localFmt, qual: this.localQual, dir: this.urlDir }) }) },
 
@@ -129,7 +129,7 @@ function app() {
     async cancel() { await fetch('/api/cancel', { method: 'POST' }); this.working = false; this.showToast('已取消') },
     openFolder() { fetch('/api/open-folder', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: Alpine.store('progress').output }) }) },
     openPath(p) { fetch('/api/open-folder', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: p }) }) },
-    playAudio() { this.showPlayer = !this.showPlayer },
+    playAudio() { this.showPlayer = !this.showPlayer; if (!this.showPlayer) { const a = document.getElementById('audio-player'); if (a) a.pause() } },
 
     // ---- Trim controls ----
     setStart() { const v = document.getElementById('player'); if (v) this.tStart = fmtTime(v.currentTime) },
