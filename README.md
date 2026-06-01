@@ -1,73 +1,84 @@
-# AudioExtract — 视频提取音频工具
+# AudioExtract
 
-从视频中提取音频的桌面工具，支持本地文件和在线链接（抖音、B站）。
+从视频中提取音频的 Windows 桌面工具。双击即用，自动打开浏览器。
 
-**Web 前端 + Python 后端，双击即用，自动打开浏览器。**
+支持本地文件、抖音直链解析、B站/YouTube 等平台。
 
 ## 功能
 
-- **本地文件**：选择视频文件，提取为 MP3/WAV/AAC/FLAC 等格式
-- **在线链接**：粘贴抖音/B站分享链接，自动下载并提取音频
-- 三档音质：低(128k) / 中(192k) / 高(320k)
-- 抖音直链解析，无需登录/Cookie
-- 实时进度显示
+- **本地文件** — 多选视频，批量提取为 MP3/WAV/AAC/FLAC
+- **在线链接** — 粘贴分享链接，支持抖音/B站/YouTube
+- **音频裁剪** — 可视化选择起止时间，只提取片段
+- **格式转换** — 纯音频格式互转
+- **三档音质** — 低 128k / 中 192k / 高 320k
+- **暗色/亮色主题** — 一键切换
+- **历史记录** — 最近提取列表，点击打开文件夹
 
 ## 快速开始
 
-### 方式一：下载 EXE（推荐）
+### 下载使用
 
-从 [Releases](../../releases) 下载 `AudioExtract.exe`，双击运行。
+从 [Releases](https://github.com/damonyang007/video-audio-extractor/releases) 下载 `AudioExtract.zip`，解压后双击 `AudioExtract.bat` 或 `AudioExtract/AudioExtract.exe`。
 
-首次使用自动下载 ffmpeg (~50MB) 和 yt-dlp (~10MB)，之后即开即用。
+首次使用自动下载 ffmpeg (~50MB) 和 yt-dlp (~10MB)。
 
-### 方式二：源码运行
+### 源码运行
 
 ```bash
-pip install flask requests
+pip install -r requirements.txt
 python app.py
 ```
 
 ## 技术栈
 
-- **前端**：HTML5 + CSS3 + JavaScript（现代暗色 UI，抖音风格）
-- **后端**：Python Flask + Server-Sent Events（实时进度）
-- **引擎**：ffmpeg（音频转换）+ yt-dlp（在线下载）
+| 层 | 技术 |
+|----|------|
+| 前端 | HTML5 + CSS3 + Alpine.js 3.x |
+| 后端 | Python Flask + Server-Sent Events |
+| 引擎 | ffmpeg + yt-dlp |
+| 打包 | PyInstaller (onedir) |
 
-## 构建
-
-```bash
-pip install pyinstaller flask requests
-pyinstaller --onefile --noconsole --name AudioExtract --add-data "templates;templates" app.py
-```
-
-## Project Structure
+## 项目结构
 
 ```
 video-audio-extractor/
-├── app.py                    # Flask routes (entry point)
+├── app.py                    # Flask entry point
 ├── audioextract/             # Backend package
 │   ├── __init__.py
-│   ├── state.py              # Shared mutable state
-│   ├── engine.py             # ffmpeg/yt-dlp core engine
-│   ├── douyin.py             # Douyin/TikTok page parser
-│   ├── bilibili.py           # Bilibili parser (yt-dlp fallback)
-│   ├── youtube.py            # YouTube parser (yt-dlp fallback)
-│   ├── history.py            # Extraction history
-│   ├── config.py             # User preferences
-│   └── dialogs.py            # Native file dialog bridge
-├── templates/                # Jinja2 frontend
-│   ├── index.html            # Page shell
-│   └── partials/             # Reusable components
-├── static/                   # Static frontend assets
+│   ├── state.py              # Shared state
+│   ├── engine.py             # ffmpeg/yt-dlp engine
+│   ├── douyin.py             # Douyin parser
+│   ├── bilibili.py           # Bilibili parser
+│   ├── youtube.py            # YouTube parser
+│   ├── history.py            # History persistence
+│   ├── config.py             # Preferences
+│   └── dialogs.py            # Native file dialogs
+├── templates/
+│   ├── index.html            # Layout shell
+│   └── partials/             # UI components (10 files)
+├── static/
 │   ├── css/style.css
 │   └── js/
 │       ├── store.js          # Alpine store + SSE
 │       ├── app.js            # Alpine component
 │       └── utils.js          # Helpers
+├── tests/                    # pytest tests
+├── .github/workflows/        # CI/CD
 ├── requirements.txt
 ├── pyproject.toml
-├── LICENSE
-└── README.md
+├── LICENSE                   # MIT
+├── CHANGELOG.md
+└── CONTRIBUTING.md
+```
+
+## 构建
+
+```bash
+pip install pyinstaller
+pyinstaller --onedir --noconsole --name AudioExtract \
+  --add-data "templates;templates" \
+  --add-data "static;static" \
+  app.py
 ```
 
 ## License
