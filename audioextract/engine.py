@@ -1,3 +1,5 @@
+"""Audio extraction engine: ffmpeg, yt-dlp, pass-through detection."""
+
 import subprocess
 import sys
 import shutil
@@ -6,7 +8,7 @@ import threading
 import zipfile
 import urllib.request
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Callable
 
 import audioextract as ae
 
