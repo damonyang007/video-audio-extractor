@@ -7,7 +7,7 @@ function app() {
     localFmt: 'mp3', localQual: 'medium', localOut: '',
     urlFmt: 'mp3', urlQual: 'medium', urlDir: '', urlText: '',
     convPath: '', convFmt: 'mp3', convQual: 'medium', convOut: '',
-    working: false, history: [], usePlaylist: false,
+    working: false, history: [], usePlaylist: false, useSubs: false, loudnorm: false,
     toast: '', toastError: false, toastAnim: false,
     theme: 'dark', showShortcuts: false,
     showOnboarding: false, onboardStep: 0,
@@ -105,17 +105,17 @@ function app() {
       if (this.tab === 'convert') {
         if (!this.convPath) return this.showToast('请选择音频文件', true)
         endpoint = '/api/convert-audio'
-        body = { input: this.convPath, output: this.convOut, format: this.convFmt, quality: this.convQual }
+        body = { input: this.convPath, output: this.convOut, format: this.convFmt, quality: this.convQual, loudnorm: this.loudnorm }
       } else if (this.tab === 'local') {
         if (!this.batchFiles.length) return this.showToast('请添加文件', true)
         endpoint = '/api/extract-file'
         body = this.batchFiles.length === 1 && (this.tStart || this.tEnd)
-          ? { input: this.batchFiles[0], output: this.localOut, format: this.localFmt, quality: this.localQual, start: this.tStart, end: this.tEnd }
-          : { files: this.batchFiles, format: this.localFmt, quality: this.localQual }
+          ? { input: this.batchFiles[0], output: this.localOut, format: this.localFmt, quality: this.localQual, start: this.tStart, end: this.tEnd, loudnorm: this.loudnorm }
+          : { files: this.batchFiles, format: this.localFmt, quality: this.localQual, loudnorm: this.loudnorm }
       } else {
         if (!this.urlText.trim()) return this.showToast('请先输入视频链接', true)
         endpoint = '/api/extract-url'
-        body = { url: this.urlText, output_dir: this.urlDir, format: this.urlFmt, quality: this.urlQual, playlist: this.usePlaylist }
+        body = { url: this.urlText, output_dir: this.urlDir, format: this.urlFmt, quality: this.urlQual, playlist: this.usePlaylist, subs: this.useSubs, loudnorm: this.loudnorm }
         this.savePrefs()
       }
       this.working = true; this.resetProgress(); this.showPlayer = false

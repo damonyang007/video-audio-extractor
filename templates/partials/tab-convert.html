@@ -15,10 +15,11 @@
       </template>
     </div>
     <div class="settings-grid" style="margin-top:14px">
-      <div class="field"><label class="label">输出格式</label><select x-model="convFmt"><option>mp3</option><option>wav</option><option>aac</option><option>m4a</option><option>ogg</option><option>flac</option></select></div>
+      <div class="field"><label class="label">输出格式</label><select x-model="convFmt"><option>mp3</option><option>wav</option><option>aac</option><option>m4a</option><option>m4r</option><option>ogg</option><option>flac</option></select></div>
       <div class="field"><label class="label">音质</label><select x-model="convQual"><option value="low">低 (128k)</option><option value="medium">中 (192k)</option><option value="high">高 (320k)</option></select></div>
     </div>
     <label class="label" style="margin-top:14px">保存至</label>
     <div class="row grow"><input type="text" x-model="convOut" placeholder="自动生成..." autocomplete="off"><button class="btn" @click="selectConvOutput">浏览</button></div>
+    <label class="playlist-toggle" style="margin-top:10px"><input type="checkbox" x-model="loudnorm"><span>音量归一化 (EBU R128)</span></label>
   </div>
 </section>

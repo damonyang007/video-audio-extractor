@@ -11,7 +11,7 @@ from typing import Optional
 import audioextract as ae
 
 CODEC_MAP = {"mp3": "libmp3lame", "wav": "pcm_s16le", "aac": "aac",
-             "m4a": "aac", "ogg": "libvorbis", "flac": "flac"}
+             "m4a": "aac", "m4r": "aac", "ogg": "libvorbis", "flac": "flac"}
 BITRATE = {"low": "128k", "medium": "192k", "high": "320k"}
 MOBILE_UA = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15"
 FFMPEG_ZIP = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
@@ -125,7 +125,7 @@ def start_job(fn):
     threading.Thread(target=fn, daemon=True).start()
 
 
-def batch_extract(files: list[str], fmt: str, qual: str) -> int:
+def batch_extract(files: list[str], fmt: str, qual: str, loudnorm: bool = False) -> int:
     """Extract audio from multiple files. Returns count of successful extractions."""
     codec = CODEC_MAP.get(fmt, "libmp3lame")
     br = BITRATE.get(qual, "192k")
@@ -138,7 +138,12 @@ def batch_extract(files: list[str], fmt: str, qual: str) -> int:
         out = str(Path(f).with_suffix(f".{fmt}"))
         c = [tool("ffmpeg.exe"), "-nostdin", "-threads", "0", "-i", f,
              "-vn", "-acodec", "copy" if can_pass_through(f, fmt) else codec,
-             "-b:a", br, "-y", out]
+             "-b:a", br]
+        if loudnorm:
+            c += ["-af", "loudnorm=I=-16:LRA=11:TP=-1.5"]
+        if fmt == "m4r":
+            c += ["-t", "30"]
+        c += ["-y", out]
         if run_ffmpeg(c) == 0 and not ae._cancel:
             ok += 1
     return ok

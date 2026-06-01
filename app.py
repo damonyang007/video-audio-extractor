@@ -81,7 +81,7 @@ def api_extract_file():
     d = request.json
     files = d.get("files")
     if files and isinstance(files, list):
-        return _batch(files, d.get("format", "mp3"), d.get("quality", "medium"))
+        return _batch(files, d.get("format", "mp3"), d.get("quality", "medium"), d.get("loudnorm", False))
 
     in_path = d.get("input", "")
     out_path = d.get("output", "")
@@ -89,6 +89,7 @@ def api_extract_file():
     qual = d.get("quality", "medium")
     t_start = d.get("start", "")
     t_end = d.get("end", "")
+    loudnorm = d.get("loudnorm", False)
 
     if not in_path or not Path(in_path).is_file():
         return jsonify({"ok": False, "error": "\u6587\u4ef6\u4e0d\u5b58\u5728"})
@@ -113,6 +114,10 @@ def api_extract_file():
             c += ["-vn", "-acodec", "copy"]
         else:
             c += ["-vn", "-acodec", codec, "-b:a", br]
+        if loudnorm:
+            c += ["-af", "loudnorm=I=-16:LRA=11:TP=-1.5"]
+        if fmt == "m4r":
+            c += ["-t", "30"]
         c += ["-y", out_path]
         rc = engine.run_ffmpeg(c)
         if rc == -1: return
@@ -125,7 +130,7 @@ def api_extract_file():
     return jsonify({"ok": True})
 
 
-def _batch(files, fmt, qual):
+def _batch(files, fmt, qual, loudnorm=False):
     valid = [f for f in files if isinstance(f, str) and Path(f).is_file()]
     if not valid:
         return jsonify({"ok": False, "error": "\u65e0\u6709\u6548\u6587\u4ef6"})
@@ -135,7 +140,7 @@ def _batch(files, fmt, qual):
     ae.store["file_i"] = 0
 
     def job():
-        ok = engine.batch_extract(valid, fmt, qual)
+        ok = engine.batch_extract(valid, fmt, qual, loudnorm)
         ae.store.update({"pct": 100, "output": valid[-1] if valid else "",
                         "status": f"\u2714 {ok}/{len(valid)} \u5b8c\u6210" if ok else "\u5931\u8d25", "done": True})
         for f in valid:
@@ -199,13 +204,14 @@ def api_extract_url():
         ytdlp = engine.ensure_ytdlp()
         br = engine.BITRATE.get(qual, "192k").replace("k", "")
         ae.store["status"] = "yt-dlp \u4e0b\u8f7d\u4e2d ..."
-        ae._proc = subprocess.Popen(
-            [ytdlp, "-x", "--audio-format", fmt, "--audio-quality", br,
-                "-o", str(Path(out_dir) / "%(title)s.%(ext)s"),
-                "--no-playlist" if not d.get("playlist") else "--yes-playlist", url],
-            stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-            text=True, encoding="utf-8", errors="replace"
-        )
+        ytdlp_cmd = [ytdlp, "-x", "--audio-format", fmt, "--audio-quality", br,
+                     "-o", str(Path(out_dir) / "%(title)s.%(ext)s"),
+                     "--no-playlist" if not d.get("playlist") else "--yes-playlist"]
+        if d.get("subs"):
+            ytdlp_cmd += ["--write-subs", "--sub-lang", "zh,en", "--convert-subs", "srt"]
+        ytdlp_cmd.append(url)
+        ae._proc = subprocess.Popen(ytdlp_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                   text=True, encoding="utf-8", errors="replace")
         for line in ae._proc.stdout:
             if ae._cancel:
                 ae._proc.terminate(); break
@@ -243,11 +249,17 @@ def api_convert_audio():
     out = d.get("output") or str(Path(in_path).with_suffix(f".{out_fmt}"))
     codec = engine.CODEC_MAP.get(out_fmt, "libmp3lame")
     br = engine.BITRATE.get(d.get("quality", "medium"), "192k")
+    loudnorm = d.get("loudnorm", False)
     ae.store["status"] = "\u8f6c\u6362\u4e2d ..."
 
     def job():
         c = [engine.tool("ffmpeg.exe"), "-nostdin", "-threads", "0", "-i", in_path,
-             "-acodec", codec, "-b:a", br, "-y", out]
+             "-acodec", codec, "-b:a", br]
+        if loudnorm:
+            c += ["-af", "loudnorm=I=-16:LRA=11:TP=-1.5"]
+        if out_fmt == "m4r":
+            c += ["-t", "30"]
+        c += ["-y", out]
         rc = engine.run_ffmpeg(c)
         ae.store.update({"pct": 100, "output": out,
                         "status": "\u2714 \u5df2\u5b8c\u6210" if rc == 0 else "\u5931\u8d25", "done": True})
