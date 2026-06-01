@@ -40,6 +40,36 @@ pip install pyinstaller flask requests
 pyinstaller --onefile --noconsole --name AudioExtract --add-data "templates;templates" app.py
 ```
 
+## Project Structure
+
+```
+video-audio-extractor/
+├── app.py                    # Flask routes (entry point)
+├── audioextract/             # Backend package
+│   ├── __init__.py
+│   ├── state.py              # Shared mutable state
+│   ├── engine.py             # ffmpeg/yt-dlp core engine
+│   ├── douyin.py             # Douyin/TikTok page parser
+│   ├── bilibili.py           # Bilibili parser (yt-dlp fallback)
+│   ├── youtube.py            # YouTube parser (yt-dlp fallback)
+│   ├── history.py            # Extraction history
+│   ├── config.py             # User preferences
+│   └── dialogs.py            # Native file dialog bridge
+├── templates/                # Jinja2 frontend
+│   ├── index.html            # Page shell
+│   └── partials/             # Reusable components
+├── static/                   # Static frontend assets
+│   ├── css/style.css
+│   └── js/
+│       ├── store.js          # Alpine store + SSE
+│       ├── app.js            # Alpine component
+│       └── utils.js          # Helpers
+├── requirements.txt
+├── pyproject.toml
+├── LICENSE
+└── README.md
+```
+
 ## License
 
 MIT
