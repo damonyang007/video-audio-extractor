@@ -1,0 +1,29 @@
+[project]
+name = "audioextract"
+version = "2.1.0"
+description = "Desktop tool to extract audio from videos, supporting local files and online platforms"
+requires-python = ">=3.9"
+dependencies = [
+    "flask>=3.0",
+    "requests>=2.28",
+]
+license = { text = "MIT" }
+readme = "README.md"
+
+[project.optional-dependencies]
+dev = [
+    "pyinstaller>=6.0",
+]
+
+[tool.pyinstaller]
+onedir = true
+noconsole = true
+name = "AudioExtract"
+add_data = [
+    "templates:templates",
+    "static:static",
+]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.backends._legacy:_Backend"
