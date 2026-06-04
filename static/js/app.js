@@ -7,8 +7,9 @@ function app() {
     localFmt: 'mp3', localQual: 'medium', localOut: '',
     urlFmt: 'mp3', urlQual: 'medium', urlDir: '', urlText: '',
     convPath: '', convFmt: 'mp3', convQual: 'medium', convOut: '',
-    working: false, history: [], usePlaylist: false, useSubs: false, loudnorm: false,
+    working: false, history: [], usePlaylist: false, useSubs: false, loudnorm: false, videoMode: false,
     urlBatchMode: false, urlBatchText: '',
+    presets: [],
     toast: '', toastError: false, toastAnim: false,
     theme: 'dark', showShortcuts: false, showOnboarding: false, onboardStep: 0,
 
@@ -38,6 +39,7 @@ function app() {
         if (c.fmt) { this.localFmt = this.urlFmt = c.fmt }
         if (c.qual) { this.localQual = this.urlQual = c.qual }
         if (c.dir) this.urlDir = c.dir
+        this.presets = c.presets || []
       } catch (e) { /* ok */ }
       if (!localStorage.getItem('ae-onboarded')) {
         this.showOnboarding = true; localStorage.setItem('ae-onboarded', '1')
@@ -49,7 +51,27 @@ function app() {
     retryExtract(h) { if (h.kind === 'url') { this.tab = 'url'; this.urlText = h.source; this.urlBatchMode = false } },
     async deleteHistoryItem(i) { await fetch('/api/history/delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ index: i }) }); this.history.splice(i, 1) },
     toggleTheme() { this.theme = this.theme === 'dark' ? 'light' : 'dark'; document.body.classList.toggle('light', this.theme === 'light'); localStorage.setItem('ae-theme', this.theme) },
-    async savePrefs() { await fetch('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fmt: this.localFmt, qual: this.localQual, dir: this.urlDir }) }) },
+    async savePrefs() {
+      await fetch('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fmt: this.localFmt, qual: this.localQual, dir: this.urlDir, presets: this.presets }) })
+    },
+    savePreset() {
+      const name = prompt('预设名称:')
+      if (!name) return
+      const p = { name, fmt: this.localFmt, qual: this.localQual }
+      this.presets = this.presets.filter(x => x.name !== name)
+      this.presets.push(p)
+      this.savePrefs()
+      this.showToast('预设已保存: ' + name)
+    },
+    loadPreset(name) {
+      const p = this.presets.find(x => x.name === name)
+      if (p) { this.localFmt = p.fmt; this.localQual = p.qual; this.urlFmt = p.fmt; this.urlQual = p.qual }
+    },
+    deletePreset(name) {
+      this.presets = this.presets.filter(x => x.name !== name)
+      this.savePrefs()
+    },
 
     openFile() { this.tab === 'local' && this.addBatchFile() || this.tab === 'convert' && this.selectConvFile() },
 
@@ -124,8 +146,8 @@ function app() {
         if (!this.batchFiles.length) return this.showToast('请添加文件', true)
         endpoint = '/api/extract-file'
         body = this.batchFiles.length === 1 && (this.tStart || this.tEnd)
-          ? { input: this.batchFiles[0], output: this.localOut, format: this.localFmt, quality: this.localQual, start: this.tStart, end: this.tEnd, loudnorm: this.loudnorm }
-          : { files: this.batchFiles, format: this.localFmt, quality: this.localQual, loudnorm: this.loudnorm }
+          ? { input: this.batchFiles[0], output: this.localOut, format: this.localFmt, quality: this.localQual, start: this.tStart, end: this.tEnd, loudnorm: this.loudnorm, video: this.videoMode }
+          : { files: this.batchFiles, format: this.localFmt, quality: this.localQual, loudnorm: this.loudnorm, video: this.videoMode }
       } else {
         if (this.urlBatchMode) {
           if (!this.urlBatchText.trim()) return this.showToast('请先输入链接', true)
@@ -134,7 +156,7 @@ function app() {
         } else {
           if (!this.urlText.trim()) return this.showToast('请先输入视频链接', true)
           endpoint = '/api/extract-url'
-          body = { url: this.urlText, output_dir: this.urlDir, format: this.urlFmt, quality: this.urlQual, playlist: this.usePlaylist, subs: this.useSubs, loudnorm: this.loudnorm }
+          body = { url: this.urlText, output_dir: this.urlDir, format: this.urlFmt, quality: this.urlQual, playlist: this.usePlaylist, subs: this.useSubs, loudnorm: this.loudnorm, video: this.videoMode }
         }
         this.savePrefs()
       }

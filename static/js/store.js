@@ -35,7 +35,10 @@ document.addEventListener('alpine:init', () => {
     if (d.done && d.done_seq !== _lastDoneSeq) {
       _lastDoneSeq = d.done_seq
       s.done = true; s.eta = ''
+      document.title = 'AudioExtract'
       notify(d.status, d.output)
+    } else if (d.pct > 0) {
+      document.title = '(' + Math.round(d.pct) + '%) AudioExtract'
     }
   }
 })

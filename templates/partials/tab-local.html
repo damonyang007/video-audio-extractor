@@ -59,5 +59,15 @@
     <label class="label" for="local-out" style="margin-top:14px">保存至</label>
     <div class="row grow"><input type="text" id="local-out" x-model="localOut" placeholder="自动生成..." autocomplete="off"><button class="btn" @click="selectOutput">浏览</button></div>
     <div class="playlist-toggle"><input type="checkbox" x-model="loudnorm"><span>音量归一化 (EBU R128)</span></div>
+    <div class="playlist-toggle"><input type="checkbox" x-model="videoMode"><span>下载完整视频 (非仅音频)</span></div>
+    <div style="margin-top:10px;display:flex;gap:6px;align-items:center">
+      <select @change="if($event.target.value)loadPreset($event.target.value)" style="flex:1;font-size:12px;padding:6px 10px">
+        <option value="">预设 ...</option>
+        <template x-for="p in presets" :key="p.name">
+          <option :value="p.name" x-text="p.name + ' (' + p.fmt + '/' + p.qual + ')'"></option>
+        </template>
+      </select>
+      <button class="btn btn-sm" @click="savePreset">+ 保存当前</button>
+    </div>
   </div>
 </section>

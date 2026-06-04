@@ -105,6 +105,7 @@ def api_extract_file():
     t_start = d.get("start", "")
     t_end = d.get("end", "")
     loudnorm = d.get("loudnorm", False)
+    video_mode = d.get("video", False)
 
     if not in_path or not Path(in_path).is_file():
         return jsonify({"ok": False, "error": "\u6587\u4ef6\u4e0d\u5b58\u5728"})
@@ -121,18 +122,25 @@ def api_extract_file():
     ae.store["status"] = f"\u63d0\u53d6\u4e2d ... {dur:.0f}s" if dur else "\u63d0\u53d6\u4e2d ..."
 
     def job():
-        c = [engine.tool("ffmpeg.exe"), "-nostdin", "-threads", "0"]
-        if t_start: c += ["-ss", t_start]
+        ffmpeg = engine.tool("ffmpeg.exe")
+        c = [ffmpeg, "-nostdin", "-threads", "0"]
+        if t_start:
+            c += ["-ss", t_start]
         c += ["-i", in_path]
-        if t_end: c += ["-to", t_end]
-        if engine.can_pass_through(in_path, fmt) and not has_time:
-            c += ["-vn", "-acodec", "copy"]
+        if t_end:
+            c += ["-to", t_end]
+        if not video_mode:
+            c += ["-vn"]
+        if can_pass_through(in_path, fmt) and not has_time and not video_mode:
+            c += ["-acodec", "copy"]
         else:
-            c += ["-vn", "-acodec", codec, "-b:a", br]
+            c += ["-acodec", codec, "-b:a", br]
         if loudnorm:
             c += ["-af", "loudnorm=I=-16:LRA=11:TP=-1.5"]
         if fmt == "m4r":
             c += ["-t", "30"]
+        eff_fmt = "mp4" if video_mode else fmt
+        out_path = str(Path(in_path).with_suffix(f".{eff_fmt}"))
         c += ["-y", out_path]
         rc = engine.run_ffmpeg(c)
         if rc == -1: return
@@ -174,6 +182,7 @@ def api_extract_url():
     fmt = d.get("format", "mp3")
     qual = d.get("quality", "medium")
     loudnorm = d.get("loudnorm", False)
+    video_mode = d.get("video", False)
 
     url = engine.extract_url(raw)
     if not url:
@@ -223,8 +232,10 @@ def api_extract_url():
         ytdlp = engine.ensure_ytdlp()
         br = engine.BITRATE.get(qual, "192k").replace("k", "")
         ae.store["status"] = "yt-dlp \u4e0b\u8f7d\u4e2d ..."
-        ytdlp_cmd = [ytdlp, "-x", "--audio-format", fmt, "--audio-quality", br,
-                     "-o", str(Path(out_dir) / "%(title)s.%(ext)s"),
+        ytdlp_cmd = [ytdlp]
+        if not video_mode:
+            ytdlp_cmd += ["-x", "--audio-format", fmt, "--audio-quality", br]
+        ytdlp_cmd += ["-o", str(Path(out_dir) / "%(title)s.%(ext)s"),
                      "--no-playlist" if not d.get("playlist") else "--yes-playlist"]
         if d.get("subs"):
             ytdlp_cmd += ["--write-subs", "--sub-lang", "zh,en", "--convert-subs", "srt"]
