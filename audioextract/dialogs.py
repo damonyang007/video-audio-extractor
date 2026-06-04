@@ -22,13 +22,13 @@ $d = New-Object System.Windows.Forms.SaveFileDialog
 $d.Filter = 'MP3|*.mp3|WAV|*.wav|AAC|*.aac|M4A|*.m4a|All|*.*'
 $d.DefaultExt = '.mp3'
 $d.Title = '保存文件'
-if ($d.ShowDialog() -eq 'OK') { Write-Output ($d.FileName -replace '\\','\\') } else { Write-Output '' }
+if ($d.ShowDialog() -eq 'OK') { Write-Output $d.FileName } else { Write-Output '' }
 """,
         "dir": r"""
 Add-Type -AssemblyName System.Windows.Forms
 $d = New-Object System.Windows.Forms.FolderBrowserDialog
 $d.Description = '选择保存目录'
-if ($d.ShowDialog() -eq 'OK') { Write-Output ($d.SelectedPath -replace '\\','\\') } else { Write-Output '' }
+if ($d.ShowDialog() -eq 'OK') { Write-Output $d.SelectedPath } else { Write-Output '' }
 """
     }
     r = subprocess.run(["powershell", "-STA", "-NoProfile", "-WindowStyle", "Hidden", "-Command", ps[action]],

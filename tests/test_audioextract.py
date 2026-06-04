@@ -63,8 +63,8 @@ class TestHistory:
         delete_at(1)
         entries = load()
         assert len(entries) == 2
-        assert entries[0]["source"] == "c.mp4"
-        assert entries[1]["source"] == "a.mp4"
+        assert entries[0]["source"] == "/c.mp4"
+        assert entries[1]["source"] == "/a.mp4"
 
     def test_history_cycle(self, tmp_path):
         import os
@@ -78,7 +78,7 @@ class TestHistory:
         entries = load()
         assert len(entries) == 1
         assert entries[0]["kind"] == "file"
-        assert entries[0]["source"] == "video.mp4"
+        assert entries[0]["source"] == "/test/video.mp4"
 
         add("https://example.com/v/123", "url", "/test/audio.mp3")
         entries = load()

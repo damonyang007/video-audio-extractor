@@ -140,6 +140,7 @@ function app() {
       }
       this.working = true; this.resetProgress(); this.showPlayer = false
       fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        .catch(err => { this.working = false; this.showToast('请求失败: ' + err.message, true) })
     },
 
     resetProgress() {

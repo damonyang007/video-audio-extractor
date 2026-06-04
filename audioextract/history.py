@@ -30,7 +30,7 @@ def load() -> list:
 def save(entries: list):
     try:
         history_path().write_text(
-            json.dumps(entries[-50:], ensure_ascii=False), encoding="utf-8")
+            json.dumps(entries[:50], ensure_ascii=False), encoding="utf-8")
     except Exception:
         pass
 
@@ -45,7 +45,7 @@ def delete_at(index: int):
 def add(source: str, kind: str, output: str):
     h = load()
     h.insert(0, {
-        "source": Path(source).name if kind == "file" else source[:60],
+        "source": source,
         "kind": kind,
         "output": output,
         "time": datetime.now().strftime("%m-%d %H:%M")
