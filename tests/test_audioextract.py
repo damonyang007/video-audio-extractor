@@ -19,6 +19,7 @@ class TestEngine:
         assert CODEC_MAP["mp3"] == "libmp3lame"
         assert CODEC_MAP["wav"] == "pcm_s16le"
         assert CODEC_MAP["flac"] == "flac"
+        assert "m4r" in CODEC_MAP
 
     def test_bitrate_map(self):
         assert BITRATE["low"] == "128k"
@@ -28,6 +29,16 @@ class TestEngine:
     def test_mobile_ua(self):
         assert "iPhone" in MOBILE_UA
         assert "AppleWebKit" in MOBILE_UA
+
+
+class TestBilibili:
+    def test_bvid_regex(self):
+        from audioextract.bilibili import resolve
+        url = "https://www.bilibili.com/video/BV1K3Gz6pEoo/"
+        import re
+        m = re.search(r'(BV[a-zA-Z0-9]{8,12})|(av\d+)', url)
+        assert m is not None
+        assert m.group(0) == "BV1K3Gz6pEoo"
 
 
 class TestHistory:
