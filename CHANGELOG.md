@@ -1,6 +1,6 @@
 # Changelog
 
-## v2.1.0 (unreleased)
+## v2.1.0 (2026-06)
 
 - PowerShell native file dialogs (no tkinter thread issues)
 - Light/dark theme toggle with persistence
