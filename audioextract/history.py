@@ -35,6 +35,13 @@ def save(entries: list):
         pass
 
 
+def delete_at(index: int):
+    h = load()
+    if 0 <= index < len(h):
+        h.pop(index)
+        save(h)
+
+
 def add(source: str, kind: str, output: str):
     h = load()
     h.insert(0, {

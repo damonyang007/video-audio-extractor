@@ -13,9 +13,8 @@
   --input: rgba(255,255,255,.9); --white: #0f172a; --sub: #475569; --dim: #94a3b8;
   --bg-glow: none; --primary-glow: rgba(254,44,85,.15);
 }
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Outfit',-apple-system,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--white);min-height:100vh;display:flex;justify-content:center;padding:28px 20px 48px;background-image:var(--bg-glow)}
+body{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--white);min-height:100vh;display:flex;justify-content:center;padding:28px 20px 48px;background-image:var(--bg-glow)}
 .container{width:100%;max-width:560px;display:flex;flex-direction:column;gap:14px}
 .header{display:flex;align-items:center;gap:12px;padding:4px 0 10px}
 .header-right{margin-left:auto}

@@ -5,11 +5,13 @@
   </div>
   <div class="history-card">
     <template x-for="(h,i) in history" :key="i">
-      <div class="history-item" @click="openPath(h.output)">
+      <div class="history-item" @click="openPath(h.output)" style="gap:6px">
         <span class="kind" x-text="h.kind==='url'?'URL':'FILE'"
               :style="h.kind==='url'?'background:var(--cyan)':''"></span>
         <span class="src" x-text="h.source"></span>
-        <span class="time" x-text="h.time"></span>
+        <span class="time" x-text="h.time" style="margin-left:auto"></span>
+        <span @click.stop="retryExtract(h)" style="cursor:pointer;color:var(--cyan);font-size:14px;padding:0 2px" title="重新提取">&#x21bb;</span>
+        <span @click.stop="deleteHistoryItem(i)" style="cursor:pointer;color:var(--primary);font-size:14px;padding:0 2px" title="删除">&times;</span>
       </div>
     </template>
   </div>

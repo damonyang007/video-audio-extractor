@@ -76,6 +76,13 @@ def api_history_clear():
     return jsonify({"ok": True})
 
 
+@app.route("/api/history/delete", methods=["POST"])
+def api_history_delete():
+    idx = request.json.get("index", -1)
+    history.delete_at(idx)
+    return jsonify({"ok": True})
+
+
 @app.route("/api/extract-file", methods=["POST"])
 def api_extract_file():
     d = request.json
@@ -265,6 +272,63 @@ def api_convert_audio():
                         "status": "\u2714 \u5df2\u5b8c\u6210" if rc == 0 else "\u5931\u8d25", "done": True})
         if rc == 0:
             history.add(in_path, "file", out)
+
+    engine.start_job(job)
+    return jsonify({"ok": True})
+
+
+@app.route("/api/extract-urls-batch", methods=["POST"])
+def api_extract_urls_batch():
+    d = request.json
+    urls_raw = d.get("urls", "")
+    out_dir = d.get("output_dir", "") or str(Path.home() / "Downloads")
+    fmt = d.get("format", "mp3")
+    qual = d.get("quality", "medium")
+
+    lines = [l.strip() for l in urls_raw.split("\n") if l.strip()]
+    urls = []
+    for line in lines:
+        url = engine.extract_url(line)
+        if url and url not in urls:
+            urls.append(url)
+    if not urls:
+        return jsonify({"ok": False, "error": "\u672a\u68c0\u6d4b\u5230\u94fe\u63a5"})
+    if not engine.ensure_ffmpeg():
+        return jsonify({"ok": False, "error": "ffmpeg \u5931\u8d25"})
+
+    ae.store["file_n"] = len(urls)
+    ae.store["file_i"] = 0
+
+    def job():
+        ok_count = 0
+        for i, url in enumerate(urls):
+            if ae._cancel:
+                break
+            ae.store["file_i"] = i + 1
+            ae.store["pct"] = 0
+            ae.store["status"] = f"\u4e0b\u8f7d {i+1}/{len(urls)}: {url[:40]}..."
+            ytdlp = engine.ensure_ytdlp()
+            br = engine.BITRATE.get(qual, "192k").replace("k", "")
+            cmd = [ytdlp, "-x", "--audio-format", fmt, "--audio-quality", br,
+                   "-o", str(Path(out_dir) / "%(title)s.%(ext)s"), "--no-playlist"]
+            if d.get("subs"):
+                cmd += ["--write-subs", "--sub-lang", "zh,en", "--convert-subs", "srt"]
+            cmd.append(url)
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                    text=True, encoding="utf-8", errors="replace")
+            for line in proc.stdout:
+                if ae._cancel:
+                    proc.terminate(); break
+                if "%" in line:
+                    try:
+                        ae.store["pct"] = float(line.split("%")[0].split()[-1])
+                    except Exception: pass
+                if s := line.strip():
+                    ae.store["status"] = s[:60]
+            proc.wait()
+            if proc.returncode == 0:
+                ok_count += 1
+        ae.store.update({"pct": 100, "status": f"\u2714 {ok_count}/{len(urls)} \u5b8c\u6210" if ok_count else "\u5931\u8d25", "done": True})
 
     engine.start_job(job)
     return jsonify({"ok": True})

@@ -1,10 +1,19 @@
 <section x-show="tab==='url'">
   <div class="card">
-    <div class="card-title">视频链接</div>
-    <label class="label" for="url-text">粘贴链接</label>
-    <input type="text" id="url-text" x-model="urlText"
+    <div class="card-title">
+      视频链接
+      <button class="btn btn-sm" @click="urlBatchMode=!urlBatchMode"
+              x-text="urlBatchMode?'单链接':'批量'"
+              :style="urlBatchMode?'background:var(--primary);color:#fff;border-color:var(--primary)':''" style="margin-left:auto"></button>
+    </div>
+    <label class="label" for="url-text" x-show="!urlBatchMode">粘贴链接</label>
+    <input type="text" id="url-text" x-model="urlText" x-show="!urlBatchMode"
            placeholder="粘贴抖音、B站、YouTube 链接..." autocomplete="off" @paste="onPaste">
-    <div class="hint">支持抖音 · B站 · YouTube · Ctrl+Enter 开始</div>
+    <label class="label" for="url-batch" x-show="urlBatchMode">多个链接（每行一个）</label>
+    <textarea id="url-batch" x-model="urlBatchText" x-show="urlBatchMode"
+              placeholder="每行一个链接..." rows="4" style="width:100%;background:var(--input);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--white);font-size:13px;outline:none;font-family:inherit;resize:vertical"></textarea>
+    <div class="hint" x-show="!urlBatchMode">支持抖音 · B站 · YouTube · Ctrl+Enter 开始</div>
+    <div class="hint" x-show="urlBatchMode">每行一个链接，自动去重</div>
     <label class="playlist-toggle">
       <input type="checkbox" x-model="usePlaylist">
       <span>下载整个播放列表/合集</span>

@@ -41,7 +41,31 @@ class TestBilibili:
         assert m.group(0) == "BV1K3Gz6pEoo"
 
 
+class TestYouTube:
+    def test_video_id_regex(self):
+        from audioextract.youtube import _extract_video_id
+        assert _extract_video_id("https://www.youtube.com/watch?v=dQw4w9WgXcQ") == "dQw4w9WgXcQ"
+        assert _extract_video_id("https://youtu.be/dQw4w9WgXcQ") == "dQw4w9WgXcQ"
+        assert _extract_video_id("https://www.youtube.com/embed/dQw4w9WgXcQ") == "dQw4w9WgXcQ"
+        assert _extract_video_id("not a url") is None
+
+
 class TestHistory:
+    def test_delete_at(self, tmp_path):
+        import os
+        os.environ["APPDATA"] = str(tmp_path)
+        from audioextract.history import load, save, add, delete_at
+        save([])
+        add("/a.mp4", "file", "/a.mp3")
+        add("/b.mp4", "file", "/b.mp3")
+        add("/c.mp4", "file", "/c.mp3")
+        assert len(load()) == 3
+        delete_at(1)
+        entries = load()
+        assert len(entries) == 2
+        assert entries[0]["source"] == "c.mp4"
+        assert entries[1]["source"] == "a.mp4"
+
     def test_history_cycle(self, tmp_path):
         import os
         os.environ["APPDATA"] = str(tmp_path)

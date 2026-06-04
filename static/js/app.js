@@ -8,9 +8,9 @@ function app() {
     urlFmt: 'mp3', urlQual: 'medium', urlDir: '', urlText: '',
     convPath: '', convFmt: 'mp3', convQual: 'medium', convOut: '',
     working: false, history: [], usePlaylist: false, useSubs: false, loudnorm: false,
+    urlBatchMode: false, urlBatchText: '',
     toast: '', toastError: false, toastAnim: false,
-    theme: 'dark', showShortcuts: false,
-    showOnboarding: false, onboardStep: 0,
+    theme: 'dark', showShortcuts: false, showOnboarding: false, onboardStep: 0,
 
     // ---- Lifecycle ----
     async init() {
@@ -19,8 +19,20 @@ function app() {
       })
       this.loadHistory()
       if ('Notification' in window) Notification.requestPermission()
-      this.theme = localStorage.getItem('ae-theme') || 'dark'
+      // Theme: manual preference > system preference > dark default
+      const saved = localStorage.getItem('ae-theme')
+      if (saved) {
+        this.theme = saved
+      } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+        this.theme = 'light'
+      }
       if (this.theme === 'light') document.body.classList.add('light')
+      window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', e => {
+        if (!localStorage.getItem('ae-theme')) {
+          this.theme = e.matches ? 'light' : 'dark'
+          document.body.classList.toggle('light', this.theme === 'light')
+        }
+      })
       try {
         const r = await fetch('/api/config'), c = await r.json()
         if (c.fmt) { this.localFmt = this.urlFmt = c.fmt }
@@ -34,6 +46,8 @@ function app() {
 
     async loadHistory() { try { const r = await fetch('/api/history'); this.history = await r.json() } catch (e) { } },
     async clearHistory() { if (confirm('确定清除所有记录？')) { await fetch('/api/history/clear', { method: 'POST' }); this.history = [] } },
+    retryExtract(h) { if (h.kind === 'url') { this.tab = 'url'; this.urlText = h.source; this.urlBatchMode = false } },
+    async deleteHistoryItem(i) { await fetch('/api/history/delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ index: i }) }); this.history.splice(i, 1) },
     toggleTheme() { this.theme = this.theme === 'dark' ? 'light' : 'dark'; document.body.classList.toggle('light', this.theme === 'light'); localStorage.setItem('ae-theme', this.theme) },
     async savePrefs() { await fetch('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fmt: this.localFmt, qual: this.localQual, dir: this.urlDir }) }) },
 
@@ -113,9 +127,15 @@ function app() {
           ? { input: this.batchFiles[0], output: this.localOut, format: this.localFmt, quality: this.localQual, start: this.tStart, end: this.tEnd, loudnorm: this.loudnorm }
           : { files: this.batchFiles, format: this.localFmt, quality: this.localQual, loudnorm: this.loudnorm }
       } else {
-        if (!this.urlText.trim()) return this.showToast('请先输入视频链接', true)
-        endpoint = '/api/extract-url'
-        body = { url: this.urlText, output_dir: this.urlDir, format: this.urlFmt, quality: this.urlQual, playlist: this.usePlaylist, subs: this.useSubs, loudnorm: this.loudnorm }
+        if (this.urlBatchMode) {
+          if (!this.urlBatchText.trim()) return this.showToast('请先输入链接', true)
+          endpoint = '/api/extract-urls-batch'
+          body = { urls: this.urlBatchText, output_dir: this.urlDir, format: this.urlFmt, quality: this.urlQual, playlist: this.usePlaylist, subs: this.useSubs }
+        } else {
+          if (!this.urlText.trim()) return this.showToast('请先输入视频链接', true)
+          endpoint = '/api/extract-url'
+          body = { url: this.urlText, output_dir: this.urlDir, format: this.urlFmt, quality: this.urlQual, playlist: this.usePlaylist, subs: this.useSubs, loudnorm: this.loudnorm }
+        }
         this.savePrefs()
       }
       this.working = true; this.resetProgress(); this.showPlayer = false
