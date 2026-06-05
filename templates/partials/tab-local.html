@@ -60,6 +60,12 @@
     <div class="row grow"><input type="text" id="local-out" x-model="localOut" placeholder="自动生成..." autocomplete="off"><button class="btn" @click="selectOutput">浏览</button></div>
     <div class="playlist-toggle"><input type="checkbox" x-model="loudnorm"><span>音量归一化 (EBU R128)</span></div>
     <div class="playlist-toggle"><input type="checkbox" x-model="videoMode"><span>下载完整视频 (非仅音频)</span></div>
+    <div style="margin-top:10px;display:flex;gap:6px;align-items:end;flex-wrap:wrap">
+      <div class="field" style="width:70px"><label class="label">速度</label><input type="number" x-model.number="speed" min="0.5" max="2.0" step="0.1" style="padding:6px 8px;font-size:12px"></div>
+      <div class="field" style="width:60px"><label class="label">淡入s</label><input type="number" x-model.number="fadeIn" min="0" step="0.5" style="padding:6px 8px;font-size:12px"></div>
+      <div class="field" style="width:60px"><label class="label">淡出s</label><input type="number" x-model.number="fadeOut" min="0" step="0.5" style="padding:6px 8px;font-size:12px"></div>
+      <div class="field"><label class="label">&nbsp;</label><div class="playlist-toggle" style="margin:0"><input type="checkbox" x-model="bassBoost"><span>低音</span></div></div>
+    </div>
     <div style="margin-top:10px;display:flex;gap:6px;align-items:center">
       <select @change="if($event.target.value)loadPreset($event.target.value)" style="flex:1;font-size:12px;padding:6px 10px">
         <option value="">预设 ...</option>

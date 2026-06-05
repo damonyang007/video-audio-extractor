@@ -10,6 +10,7 @@ function app() {
     working: false, history: [], usePlaylist: false, useSubs: false, loudnorm: false, videoMode: false,
     urlBatchMode: false, urlBatchText: '',
     presets: [],
+    speed: 1.0, fadeIn: 0, fadeOut: 0, bassBoost: false,
     toast: '', toastError: false, toastAnim: false,
     theme: 'dark', showShortcuts: false, showOnboarding: false, onboardStep: 0,
 
@@ -141,13 +142,13 @@ function app() {
       if (this.tab === 'convert') {
         if (!this.convPath) return this.showToast('请选择音频文件', true)
         endpoint = '/api/convert-audio'
-        body = { input: this.convPath, output: this.convOut, format: this.convFmt, quality: this.convQual, loudnorm: this.loudnorm }
+        body = { input: this.convPath, output: this.convOut, format: this.convFmt, quality: this.convQual, loudnorm: this.loudnorm, speed: this.speed, fadeIn: this.fadeIn, fadeOut: this.fadeOut, bassBoost: this.bassBoost }
       } else if (this.tab === 'local') {
         if (!this.batchFiles.length) return this.showToast('请添加文件', true)
         endpoint = '/api/extract-file'
         body = this.batchFiles.length === 1 && (this.tStart || this.tEnd)
-          ? { input: this.batchFiles[0], output: this.localOut, format: this.localFmt, quality: this.localQual, start: this.tStart, end: this.tEnd, loudnorm: this.loudnorm, video: this.videoMode }
-          : { files: this.batchFiles, format: this.localFmt, quality: this.localQual, loudnorm: this.loudnorm, video: this.videoMode }
+          ? { input: this.batchFiles[0], output: this.localOut, format: this.localFmt, quality: this.localQual, start: this.tStart, end: this.tEnd, loudnorm: this.loudnorm, video: this.videoMode, speed: this.speed, fadeIn: this.fadeIn, fadeOut: this.fadeOut, bassBoost: this.bassBoost }
+          : { files: this.batchFiles, format: this.localFmt, quality: this.localQual, loudnorm: this.loudnorm, video: this.videoMode, speed: this.speed, fadeIn: this.fadeIn, fadeOut: this.fadeOut, bassBoost: this.bassBoost }
       } else {
         if (this.urlBatchMode) {
           if (!this.urlBatchText.trim()) return this.showToast('请先输入链接', true)

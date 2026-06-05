@@ -135,8 +135,9 @@ def api_extract_file():
             c += ["-acodec", "copy"]
         else:
             c += ["-acodec", codec, "-b:a", br]
-        if loudnorm:
-            c += ["-af", "loudnorm=I=-16:LRA=11:TP=-1.5"]
+        af = _build_af(d, dur or 0)
+        if af:
+            c += ["-af", af]
         if fmt == "m4r":
             c += ["-t", "30"]
         eff_fmt = "mp4" if video_mode else fmt
@@ -266,6 +267,24 @@ def api_extract_url():
 
     engine.start_job(job)
     return jsonify({"ok": True})
+
+def _build_af(d: dict, duration: float = 0) -> str:
+    """Build ffmpeg -af filter chain from request params."""
+    filters = []
+    speed = float(d.get("speed", 1.0) or 1.0)
+    if speed != 1.0:
+        filters.append(f"atempo={speed}")
+    fi = float(d.get("fadeIn", 0) or 0)
+    if fi > 0:
+        filters.append(f"afade=t=in:d={fi}")
+    fo = float(d.get("fadeOut", 0) or 0)
+    if fo > 0 and duration > 0:
+        filters.append(f"afade=t=out:st={max(0, duration - fo)}:d={fo}")
+    if d.get("bassBoost"):
+        filters.append("equalizer=f=80:t=q:w=1:g=6")
+    if d.get("loudnorm"):
+        filters.append("loudnorm=I=-16:LRA=11:TP=-1.5")
+    return ",".join(filters) if filters else ""
 
 
 @app.route("/api/convert-audio", methods=["POST"])
