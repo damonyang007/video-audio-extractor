@@ -245,23 +245,7 @@ def api_extract_url():
         ae._proc = subprocess.Popen(ytdlp_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                     text=True, encoding="utf-8", errors="replace",
                                     stdin=subprocess.DEVNULL)
-        for line in ae._proc.stdout:
-            if ae._cancel:
-                ae._proc.terminate(); break
-            if "%" in line:
-                try:
-                    ae.store["pct"] = float(line.split("%")[0].split()[-1])
-                except Exception: pass
-            if s := line.strip():
-                ae.store["status"] = s[:60]
-            if "[download] Destination:" in line:
-                ae.store["output"] = line.split("Destination:")[-1].strip()
-            if "has already been downloaded" in line:
-                ae.store["output"] = line.split("] ")[-1].split(" has already")[0].strip()
-            if "already in target format" in line:
-                ae.store["output"] = line.split("] Not converting")[0].split("] ")[-1].strip()
-        ae._proc.wait()
-        ok = ae._proc.returncode == 0
+        ok = engine.parse_ytdlp_output(ae._proc) == 0
         if ok and ae.store["output"]:
             history.add(url, "url", ae.store["output"])
         ae.store.update({"status": "\u2714 \u5df2\u5b8c\u6210" if ok else "\u5931\u8d25", "pct": 100, "done": True})
@@ -365,20 +349,10 @@ def api_extract_urls_batch():
             proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                     text=True, encoding="utf-8", errors="replace",
                                     stdin=subprocess.DEVNULL)
-            out_path = ""
-            for line in proc.stdout:
-                if ae._cancel:
-                    proc.terminate(); break
-                if "%" in line:
-                    try:
-                        ae.store["pct"] = float(line.split("%")[0].split()[-1])
-                    except Exception: pass
-                if s := line.strip():
-                    ae.store["status"] = s[:60]
-                if "[download] Destination:" in line:
-                    out_path = line.split("Destination:")[-1].strip()
-            proc.wait()
-            if proc.returncode == 0:
+            ok = engine.parse_ytdlp_output(proc) == 0
+            out_path = ae.store["output"]
+            ae.store["output"] = ""
+            if ok:
                 ok_count += 1
                 if out_path:
                     history.add(url, "url", out_path)

@@ -138,30 +138,33 @@ function app() {
 
     // ---- Extraction ----
     async doExtract() {
-      let endpoint, body
-      if (this.tab === 'convert') {
-        if (!this.convPath) return this.showToast('请选择音频文件', true)
-        endpoint = '/api/convert-audio'
-        body = { input: this.convPath, output: this.convOut, format: this.convFmt, quality: this.convQual, loudnorm: this.loudnorm, speed: this.speed, fadeIn: this.fadeIn, fadeOut: this.fadeOut, bassBoost: this.bassBoost }
-      } else if (this.tab === 'local') {
-        if (!this.batchFiles.length) return this.showToast('请添加文件', true)
-        endpoint = '/api/extract-file'
-        body = this.batchFiles.length === 1 && (this.tStart || this.tEnd)
-          ? { input: this.batchFiles[0], output: this.localOut, format: this.localFmt, quality: this.localQual, start: this.tStart, end: this.tEnd, loudnorm: this.loudnorm, video: this.videoMode, speed: this.speed, fadeIn: this.fadeIn, fadeOut: this.fadeOut, bassBoost: this.bassBoost }
-          : { files: this.batchFiles, format: this.localFmt, quality: this.localQual, loudnorm: this.loudnorm, video: this.videoMode, speed: this.speed, fadeIn: this.fadeIn, fadeOut: this.fadeOut, bassBoost: this.bassBoost }
-      } else {
-        if (this.urlBatchMode) {
-          if (!this.urlBatchText.trim()) return this.showToast('请先输入链接', true)
-          endpoint = '/api/extract-urls-batch'
-          body = { urls: this.urlBatchText, output_dir: this.urlDir, format: this.urlFmt, quality: this.urlQual, playlist: this.usePlaylist, subs: this.useSubs }
-        } else {
-          if (!this.urlText.trim()) return this.showToast('请先输入视频链接', true)
-          endpoint = '/api/extract-url'
-          body = { url: this.urlText, output_dir: this.urlDir, format: this.urlFmt, quality: this.urlQual, playlist: this.usePlaylist, subs: this.useSubs, loudnorm: this.loudnorm, video: this.videoMode }
-        }
-        this.savePrefs()
-      }
+      const tab = this.tab
+      const fail = msg => { this.showToast(msg, true); return }
+
+      if (tab === 'convert' && !this.convPath) return fail('请选择音频文件')
+      if (tab === 'local' && !this.batchFiles.length) return fail('请添加文件')
+      if (tab === 'url' && !this.urlText.trim()) return fail('请先输入视频链接')
+
       this.working = true; this.resetProgress(); this.showPlayer = false
+
+      const bodies = {
+        convert: { endpoint: '/api/convert-audio', body: { input: this.convPath, output: this.convOut, format: this.convFmt, quality: this.convQual, loudnorm: this.loudnorm, speed: this.speed, fadeIn: this.fadeIn, fadeOut: this.fadeOut, bassBoost: this.bassBoost } },
+        local: {
+          endpoint: '/api/extract-file',
+          body: this.batchFiles.length === 1 && (this.tStart || this.tEnd)
+            ? { input: this.batchFiles[0], output: this.localOut, format: this.localFmt, quality: this.localQual, start: this.tStart, end: this.tEnd, loudnorm: this.loudnorm, video: this.videoMode, speed: this.speed, fadeIn: this.fadeIn, fadeOut: this.fadeOut, bassBoost: this.bassBoost }
+            : { files: this.batchFiles, format: this.localFmt, quality: this.localQual, loudnorm: this.loudnorm, video: this.videoMode, speed: this.speed, fadeIn: this.fadeIn, fadeOut: this.fadeOut, bassBoost: this.bassBoost }
+        },
+        url: {
+          endpoint: this.urlBatchMode ? '/api/extract-urls-batch' : '/api/extract-url',
+          body: this.urlBatchMode
+            ? { urls: this.urlBatchText, output_dir: this.urlDir, format: this.urlFmt, quality: this.urlQual, playlist: this.usePlaylist, subs: this.useSubs }
+            : { url: this.urlText, output_dir: this.urlDir, format: this.urlFmt, quality: this.urlQual, playlist: this.usePlaylist, subs: this.useSubs, loudnorm: this.loudnorm, video: this.videoMode }
+        }
+      }
+
+      const { endpoint, body } = bodies[tab]
+      if (tab === 'url') this.savePrefs()
       fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
         .catch(err => { this.working = false; this.showToast('请求失败: ' + err.message, true) })
     },

@@ -119,8 +119,30 @@ def start_job(fn):
     ae.store["pct"] = 0
     ae.store["done"] = False
     ae.store["output"] = ""
-    ae.store["done_seq"] += 1
     threading.Thread(target=fn, daemon=True).start()
+
+
+def parse_ytdlp_output(proc: subprocess.Popen) -> int:
+    """Parse yt-dlp stdout for progress and output path. Returns exit code."""
+    for line in proc.stdout:
+        if ae._cancel:
+            proc.terminate()
+            break
+        if "%" in line:
+            try:
+                ae.store["pct"] = float(line.split("%")[0].split()[-1])
+            except Exception:
+                pass
+        if s := line.strip():
+            ae.store["status"] = s[:60]
+        if "[download] Destination:" in line:
+            ae.store["output"] = line.split("Destination:")[-1].strip()
+        if "has already been downloaded" in line:
+            ae.store["output"] = line.split("] ")[-1].split(" has already")[0].strip()
+        if "already in target format" in line:
+            ae.store["output"] = line.split("] Not converting")[0].split("] ")[-1].strip()
+    proc.wait()
+    return proc.returncode
 
 
 def batch_extract(files: list[str], fmt: str, qual: str, loudnorm: bool = False) -> int:
