@@ -102,12 +102,7 @@ def get_duration(in_path: str) -> Optional[float]:
 
 
 def run_ffmpeg(cmd: list) -> int:
-    ae._proc = subprocess.Popen(cmd, stderr=subprocess.PIPE, text=True, encoding="utf-8", errors="replace")
-    duration = None
-    for line in ae._proc.stderr:
-        if ae._cancel:
-            ae._proc.terminate()
-            break
+    ae._proc = subprocess.Popen(cmd, stderr=subprocess.DEVNULL)
     ae._proc.wait()
     if ae._cancel:
         return -1

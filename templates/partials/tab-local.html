@@ -53,7 +53,7 @@
   <div class="card">
     <div class="card-title">输出设置</div>
     <div class="settings-grid">
-      <div class="field"><label class="label" for="local-fmt">格式</label><select id="local-fmt" x-model="localFmt" @change="savePrefs"><option>mp3</option><option>wav</option><option>aac</option><option>m4a</option><option>m4r</option><option>ogg</option><option>flac</option></select></div>
+      <div class="field"><label class="label" for="local-fmt">格式</label><select id="local-fmt" x-model="localFmt" @change="savePrefs">{% include 'partials/macro-fmt.html' %}</select></div>
       <div class="field"><label class="label" for="local-qual">音质</label><select id="local-qual" x-model="localQual" @change="savePrefs"><option value="low">低 (128k)</option><option value="medium">中 (192k)</option><option value="high">高 (320k)</option></select></div>
     </div>
     <label class="label" for="local-out" style="margin-top:14px">保存至</label>

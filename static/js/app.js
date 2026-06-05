@@ -111,7 +111,7 @@ function app() {
       }
     },
     onPaste(e) {
-      const t = (e.clipboardData || window.clipboardData).getData('text')
+      const t = e.clipboardData.getData('text')
       if (t && t.includes('http') && !this.urlText) {
         setTimeout(() => this.urlText.includes('http') && this.showToast('检测到链接，Ctrl+Enter 开始'), 100)
       }

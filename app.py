@@ -402,8 +402,7 @@ def main():
     threading.Thread(target=lambda: app.run(host="127.0.0.1", port=port, debug=False), daemon=True).start()
     time.sleep(1)
     webbrowser.open(f"http://127.0.0.1:{port}")
-    while True:
-        time.sleep(1)
+    threading.Event().wait()
 
 
 if __name__ == "__main__":
