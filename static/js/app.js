@@ -83,7 +83,7 @@ function app() {
         if (!this.batchFiles.includes(p)) this.batchFiles.push(p)
       }
       if (this.batchFiles.length === 1) {
-        this.localOut = this.batchFiles[0].split('\\').pop().replace(/\.[^.]+$/, '') + '.' + this.localFmt
+        this.localOut = basename(this.batchFiles[0]).stem + '.' + this.localFmt
         this.previewFile = this.batchFiles[0]
       } else {
         this.localOut = ''

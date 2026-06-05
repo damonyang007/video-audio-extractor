@@ -16,6 +16,7 @@ CODEC_MAP = {"mp3": "libmp3lame", "wav": "pcm_s16le", "aac": "aac",
              "m4a": "aac", "m4r": "aac", "ogg": "libvorbis", "flac": "flac"}
 BITRATE = {"low": "128k", "medium": "192k", "high": "320k"}
 MOBILE_UA = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15"
+LOUDNORM = "loudnorm=I=-16:LRA=11:TP=-1.5"
 FFMPEG_ZIP = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
 YTDLP_EXE = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe"
 
@@ -142,7 +143,7 @@ def batch_extract(files: list[str], fmt: str, qual: str, loudnorm: bool = False)
              "-vn", "-acodec", "copy" if can_pass_through(f, fmt) else codec,
              "-b:a", br]
         if loudnorm:
-            c += ["-af", "loudnorm=I=-16:LRA=11:TP=-1.5"]
+            c += ["-af", LOUDNORM]
         if fmt == "m4r":
             c += ["-t", "30"]
         c += ["-y", out]

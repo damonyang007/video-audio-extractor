@@ -141,7 +141,8 @@ def api_extract_file():
         if fmt == "m4r":
             c += ["-t", "30"]
         eff_fmt = "mp4" if video_mode else fmt
-        out_path = str(Path(in_path).with_suffix(f".{eff_fmt}"))
+        if not out_path:
+            out_path = str(Path(in_path).with_suffix(f".{eff_fmt}"))
         c += ["-y", out_path]
         rc = engine.run_ffmpeg(c)
         if rc == -1: return
@@ -221,7 +222,7 @@ def api_extract_url():
                              "-headers", f"User-Agent: {engine.MOBILE_UA}\r\nReferer: {referer}",
                              "-i", vurl, "-vn", "-acodec", codec, "-b:a", br]
                         if loudnorm:
-                            c += ["-af", "loudnorm=I=-16:LRA=11:TP=-1.5"]
+                            c += ["-af", engine.LOUDNORM]
                         c += ["-y", out]
                         if engine.run_ffmpeg(c) == 0:
                             ae.store.update({"output": out, "status": "\u2714 \u5df2\u5b8c\u6210", "pct": 100, "done": True})
@@ -283,7 +284,7 @@ def _build_af(d: dict, duration: float = 0) -> str:
     if d.get("bassBoost"):
         filters.append("equalizer=f=80:t=q:w=1:g=6")
     if d.get("loudnorm"):
-        filters.append("loudnorm=I=-16:LRA=11:TP=-1.5")
+        filters.append(engine.LOUDNORM)
     return ",".join(filters) if filters else ""
 
 
@@ -306,7 +307,7 @@ def api_convert_audio():
         c = [engine.tool("ffmpeg.exe"), "-nostdin", "-threads", "0", "-i", in_path,
              "-acodec", codec, "-b:a", br]
         if loudnorm:
-            c += ["-af", "loudnorm=I=-16:LRA=11:TP=-1.5"]
+            c += ["-af", engine.LOUDNORM]
         if out_fmt == "m4r":
             c += ["-t", "30"]
         c += ["-y", out]

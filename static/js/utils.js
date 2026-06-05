@@ -8,3 +8,8 @@ function parseTime(t) {
   if (p.length === 2) return parseInt(p[0]) * 60 + parseInt(p[1])
   return parseInt(p[0]) * 3600 + parseInt(p[1]) * 60 + parseInt(p[2])
 }
+
+function basename(path) {
+  const name = path.split('\\').pop() || ''
+  return { name, stem: name.replace(/\.[^.]+$/, '') }
+}
