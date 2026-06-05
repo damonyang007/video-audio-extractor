@@ -1,51 +1,68 @@
-"""File dialog bridge using tkinter in a dedicated system thread."""
+"""File dialog bridge via PowerShell with TopMost parent for foreground dialogs."""
 
-import tkinter as tk
-from tkinter import filedialog
-import threading
+import subprocess
 import json
+import tempfile
+import os
 
-_result = None
-_done = threading.Event()
+CREATE_NO_WINDOW = 0x08000000
 
+HEAD = """
+Add-Type -AssemblyName System.Windows.Forms
+$p = New-Object System.Windows.Forms.Form
+$p.TopMost = $true
+$p.Width = 1; $p.Height = 1
+$p.StartPosition = 'CenterScreen'
+$p.Show()
+$p.Hide()
+"""
 
-def _dialog_thread(action: str):
-    global _result
-    root = tk.Tk()
-    root.withdraw()
-    root.attributes('-topmost', True)
-    root.update()
-    root.attributes('-topmost', False)
+FOOT = """
+$p.Close()
+"""
 
-    if action == "files":
-        paths = filedialog.askopenfilenames(
-            parent=root, title="选择文件",
-            filetypes=[("媒体", "*.mp4 *.mkv *.avi *.mov *.wmv *.flv *.webm *.m4v *.mpg *.mpeg *.ts *.rmvb *.3gp *.mp3 *.wav *.aac *.m4a *.ogg *.flac"),
-                       ("所有", "*.*")]
-        )
-        _result = json.dumps(list(paths)) if paths else "[]"
-    elif action == "save":
-        p = filedialog.asksaveasfilename(
-            parent=root, title="保存文件",
-            defaultextension=".mp3",
-            filetypes=[("MP3", "*.mp3"), ("WAV", "*.wav"), ("所有", "*.*")]
-        )
-        _result = p or ""
-    elif action == "dir":
-        p = filedialog.askdirectory(parent=root, title="选择保存目录")
-        _result = p or ""
-
-    root.destroy()
-    _done.set()
+PS_SCRIPTS = {
+    "files": HEAD + """
+$d = New-Object System.Windows.Forms.OpenFileDialog
+$d.Multiselect = $true
+$d.Filter = 'Media|*.mp4;*.mkv;*.avi;*.mov;*.wmv;*.flv;*.webm;*.m4v;*.mpg;*.mpeg;*.ts;*.rmvb;*.3gp;*.mp3;*.wav;*.aac;*.m4a;*.ogg;*.flac|All|*.*'
+$r = $d.ShowDialog($p)
+if ($r -eq 'OK') { ConvertTo-Json @($d.FileNames) } else { '[]' }
+""" + FOOT,
+    "save": HEAD + """
+$d = New-Object System.Windows.Forms.SaveFileDialog
+$d.Filter = 'MP3|*.mp3|WAV|*.wav|AAC|*.aac|M4A|*.m4a|All|*.*'
+$d.DefaultExt = '.mp3'
+$r = $d.ShowDialog($p)
+if ($r -eq 'OK') { Write-Output $d.FileName } else { Write-Output '' }
+""" + FOOT,
+    "dir": HEAD + """
+$d = New-Object System.Windows.Forms.FolderBrowserDialog
+$d.Description = 'Choose Folder'
+$r = $d.ShowDialog($p)
+if ($r -eq 'OK') { Write-Output $d.SelectedPath } else { Write-Output '' }
+""" + FOOT,
+}
 
 
 def request_dialog(action: str) -> str:
-    global _result, _done
-    _result = None
-    _done.clear()
+    script = PS_SCRIPTS.get(action, "")
+    ps_file = os.path.join(tempfile.gettempdir(), f"ae_{action}_{os.getpid()}.ps1")
+    with open(ps_file, "w", encoding="utf-8") as f:
+        f.write(script)
 
-    thread = threading.Thread(target=_dialog_thread, args=(action,), daemon=True)
-    thread.start()
-    _done.wait(timeout=300)
+    r = subprocess.run(
+        ["powershell", "-STA", "-NoProfile", "-WindowStyle", "Hidden",
+         "-ExecutionPolicy", "Bypass", "-File", ps_file],
+        capture_output=True, text=True, timeout=300,
+        creationflags=CREATE_NO_WINDOW
+    )
 
-    return _result if _result is not None else "[]" if action == "files" else ""
+    try: os.unlink(ps_file)
+    except Exception: pass
+
+    raw = r.stdout.strip()
+    if action == "files":
+        try: return json.dumps(json.loads(raw))
+        except: return "[]"
+    return raw
